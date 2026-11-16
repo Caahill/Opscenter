@@ -1,0 +1,31 @@
+{
+  "name": "@opshub/db",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json -w --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "migrate:new": "dotenv -e ../../.env -- prisma migrate dev --create-only --name",
+    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "seed": "dotenv -e ../../.env -- tsx src/seed.ts",
+    "reset": "dotenv -e ../../.env -- prisma migrate reset --force --skip-seed && pnpm seed",
+    "studio": "dotenv -e ../../.env -- prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "@opshub/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "dotenv-cli": "8.0.0",
+    "prisma": "6.19.3",
+    "tsx": "4.23.15",
+    "vitest": "3.2.7"
+  }
+}

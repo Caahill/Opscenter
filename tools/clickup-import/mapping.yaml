@@ -1,0 +1,78 @@
+# ClickUp -> Ops Hub mapping (TechSpec 7.4). Admin reviews this file before the real import.
+# The dry run reports any list or status not covered here in mapping-gaps.csv.
+
+workspace:
+  teamId: "3715573"
+  spaceId: "3796574"
+  spaceName: "SySpree's Backend Team"
+
+lists:
+  - { id: "9708948", name: "SEO - Keyword Analysis", department: PRE_SALES, taskType: PRESALES_REQUEST, subtype: "Keyword analysis" }
+  - { id: "181273685", name: "SEO AUDIT REQUESTS", department: PRE_SALES, taskType: PRESALES_REQUEST, subtype: "SEO audit" }
+  - { id: "199413361", name: "WEB - Efforts Estimate", department: PRE_SALES, taskType: PRESALES_REQUEST, subtype: "Web estimate" }
+  - { id: "193331004", name: "SERP, Backlinks, GA Request", department: PRE_SALES, taskType: PRESALES_REQUEST, subtype: "SERP / backlinks / GA" }
+  - { id: "901606772483", name: "Google Ad - Pitch Request", department: PRE_SALES, taskType: PRESALES_REQUEST, subtype: "Ads pitch" }
+  - { id: "181231740", name: "Welcome Onboard", department: ONBOARDING }
+  - { id: "7777694", name: "Web Development", department: WEB_DEV }
+  - { id: "11936099", name: "AMC", department: AMC, dateFields: { "Start Date": startDate, "End Date": endDate } }
+  - { id: "901606861968", name: "Speed Audit Responsiveness Audit", department: SPEED_AUDIT }
+  - { id: "49349407", name: "SEO", department: SEO, packageTier: Standard }
+  - { id: "11948175", name: "Advanced seo", department: SEO, packageTier: Advanced }
+  - { id: "9802117", name: "Google Ads", department: GOOGLE_ADS }
+  - { id: "9808851", name: "Social Media", department: SOCIAL_MEDIA }
+  - { id: "205319158", name: "Graphic", department: GRAPHIC_DESIGN }
+
+# status (lower-case, as ClickUp returns it) -> stage name in the department pipeline and status type.
+# `stage: KEEP` keeps the stage implied by the department's other statuses (hold, stop).
+# `assignee` turns a person baked into a status name into the task assignee.
+statuses:
+  default:
+    "to do": { stage: FIRST, statusType: NOT_STARTED }
+    "open": { stage: FIRST, statusType: NOT_STARTED }
+    "in progress": { stage: SECOND, statusType: ACTIVE }
+    "complete": { stage: LAST_DONE, statusType: DONE }
+    "closed": { stage: LAST_DONE, statusType: DONE }
+    "project closed": { stage: LAST_DONE, statusType: DONE }
+    "pending or on hold": { stage: KEEP, statusType: ON_HOLD }
+    "stop work": { stage: KEEP, statusType: STOPPED }
+    "stopped work": { stage: KEEP, statusType: STOPPED }
+    "project stopped": { stage: KEEP, statusType: STOPPED }
+  ONBOARDING:
+    "new client - sales team": { stage: "Deal closed", statusType: ACTIVE }
+    "email - backend team": { stage: "Welcome email sent", statusType: ACTIVE }
+  WEB_DEV:
+    "open": { stage: "Requirements and sitemap", statusType: NOT_STARTED }
+    "mockup / figma - pranita": { stage: "Design (Figma)", statusType: ACTIVE, assignee: "Pranita" }
+    "in progress / development": { stage: "Development", statusType: ACTIVE }
+    "in review": { stage: "Client review", statusType: WAITING_ON_CLIENT }
+  AMC:
+    "active amc": { stage: "Active", statusType: ACTIVE }
+  SPEED_AUDIT:
+    "in progress": { stage: "Audit", statusType: ACTIVE }
+  SEO:
+    "pre sales seo audits": { stage: "Access", statusType: NOT_STARTED }
+    "on boarding": { stage: "Access", statusType: ACTIVE }
+    "welcome onboard": { stage: "Access", statusType: ACTIVE }
+    "consultation": { stage: "Keyword research", statusType: ACTIVE }
+    "digital strategy": { stage: "Keyword research", statusType: ACTIVE }
+    "keyword analysis": { stage: "Keyword research", statusType: ACTIVE }
+    "keywords to finalise": { stage: "Keywords approved by client", statusType: WAITING_ON_CLIENT }
+    "create baseline - utkarsha": { stage: "Baseline report", statusType: ACTIVE, assignee: "Utkarsha" }
+    "tech audit": { stage: "Tech audit", statusType: ACTIVE }
+    "on page": { stage: "On-page creation", statusType: ACTIVE }
+    "on page creation": { stage: "On-page creation", statusType: ACTIVE }
+    "new page content": { stage: "On-page creation", statusType: ACTIVE }
+    "implementation - pooja": { stage: "On-page implementation", statusType: ACTIVE, assignee: "Pooja" }
+    "implementation - (pooja)": { stage: "On-page implementation", statusType: ACTIVE, assignee: "Pooja" }
+    "backlinks": { stage: "Monthly cycle", statusType: ACTIVE }
+    "backlinks new": { stage: "Monthly cycle", statusType: ACTIVE }
+  GOOGLE_ADS:
+    "keyword analysis budgeting": { stage: "Keyword analysis and budgeting", statusType: ACTIVE }
+    "strategy call": { stage: "Strategy call", statusType: ACTIVE }
+    "account setup": { stage: "Account setup", statusType: ACTIVE }
+    "landing page / gtm": { stage: "Landing page / GTM", statusType: ACTIVE }
+    "campaign setup": { stage: "Campaign setup", statusType: ACTIVE }
+    # Working stages that ClickUp keeps in its Done group stay open here (PRD gap list).
+    "ads live": { stage: "Live optimisation", statusType: ACTIVE }
+  SOCIAL_MEDIA:
+    "active clients": { stage: "Monthly cycle", statusType: ACTIVE }

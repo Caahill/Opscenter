@@ -1,0 +1,49 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "APP_URL",
+    "API_URL",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "S3_*",
+    "KMS_*",
+    "LOCAL_*",
+    "HASH_PEPPER",
+    "AUTH_MODE",
+    "SESSION_*",
+    "GOOGLE_*",
+    "GMAIL_*",
+    "WHATSAPP_*",
+    "AI_*",
+    "ANTHROPIC_API_KEY",
+    "CLICKUP_TOKEN",
+    "AWS_*",
+    "LOG_LEVEL"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "test:masking": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

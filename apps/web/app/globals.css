@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+@import '@opshub/ui/tokens.css';
+@source '../../../packages/ui/src';
+
+html,
+body {
+  background: var(--color-surface);
+  color: var(--color-body);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.375;
+  letter-spacing: -0.02em;
+  -webkit-font-smoothing: antialiased;
+}

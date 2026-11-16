@@ -1,0 +1,52 @@
+{
+  "name": "opshub",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "turbo run dev --continue",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:masking": "turbo run test:masking",
+    "db:generate": "pnpm --filter @opshub/db generate",
+    "db:migrate": "pnpm --filter @opshub/db migrate",
+    "db:migrate:new": "pnpm --filter @opshub/db migrate:new",
+    "db:seed": "pnpm --filter @opshub/db seed && pnpm --filter @opshub/api seed:demo",
+    "db:reset": "pnpm --filter @opshub/db reset && pnpm --filter @opshub/api seed:demo",
+    "db:studio": "pnpm --filter @opshub/db studio",
+    "db:local": "node scripts/local-postgres.mjs",
+    "keys:generate": "node scripts/generate-keys.mjs",
+    "jobs:run": "pnpm --filter @opshub/worker jobs:run",
+    "format": "prettier --write .",
+    "test:e2e": "turbo run build --filter=@opshub/api && pnpm --filter @opshub/web test:e2e",
+    "import:clickup": "pnpm --filter @opshub/clickup-import start"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@next/eslint-plugin-next": "15.5.28",
+    "@types/node": "24.19.2",
+    "embedded-postgres": "17.10.0-beta.17",
+    "eslint": "9.39.5",
+    "prettier": "3.9.10",
+    "turbo": "2.11.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@embedded-postgres/darwin-arm64",
+      "@embedded-postgres/darwin-x64",
+      "@embedded-postgres/linux-x64",
+      "@prisma/client",
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "prisma",
+      "sharp"
+    ]
+  }
+}

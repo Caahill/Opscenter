@@ -1,0 +1,28 @@
+{
+  "name": "@opshub/worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "jobs:run": "tsx src/run-once.ts"
+  },
+  "dependencies": {
+    "@opshub/db": "workspace:*",
+    "@opshub/integrations": "workspace:*",
+    "@opshub/policy": "workspace:*",
+    "@opshub/shared": "workspace:*",
+    "bullmq": "5.81.5",
+    "ioredis": "5.11.1",
+    "pino": "9.14.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "13.2.0",
+    "tsx": "4.23.15",
+    "vitest": "3.2.7"
+  }
+}

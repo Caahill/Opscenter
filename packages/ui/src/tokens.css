@@ -1,0 +1,54 @@
+/* Design tokens from docs/DESIGN.md, as Tailwind v4 theme variables.
+   Marketing-scale type (display, hero, headline) is not used in the app; app screens use
+   title-sm and below. Logo gradient colours are not used: Ops Hub is not a ClickUp product. */
+@theme {
+  --color-primary: #202020;
+  --color-accent: #7612fa;
+  --color-accent-hover: #6647f0;
+  --color-accent-pressed: #4a2fff;
+  --color-ink: #090c1d;
+  --color-body: #202020;
+  --color-muted: #646464;
+  --color-canvas: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-surface-alt: #f1f1f9;
+  --color-border: #cfcfcf;
+  --color-border-strong: #b4b4b4;
+  --color-link: #0091ff;
+  --color-success: #30a46c;
+  --color-warning: #ffc53d;
+  --color-error: #e5484d;
+  --color-ai-pink: #fa12e3;
+  --color-ai-cyan: #12d0fa;
+  --color-product-teal: #12a594;
+  --color-deep-panel: #1e1e1e;
+  --color-pale-purple: #efedfd;
+  --color-pale-pink: #fff1fe;
+  --color-pale-blue: #e9e9f6;
+  --color-pale-orange: #ffece5;
+  --color-on-primary: #ffffff;
+
+  --font-display: var(--font-jakarta), 'Plus Jakarta Sans', Inter, sans-serif;
+  --font-sans: var(--font-inter), Inter, 'Plus Jakarta Sans', sans-serif;
+  --font-mono: var(--font-sometype), 'Sometype Mono', ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-xxl: 20px;
+  --radius-section: 32px;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-panel: 0 4px 10px rgba(13, 21, 48, 0.05);
+  --shadow-agent: 0 10px 25px rgba(18, 43, 165, 0.1);
+
+  --text-title-sm: 26px;
+  --text-title-sm--line-height: 1.25;
+  --text-title-sm--letter-spacing: -0.035em;
+  --text-body: 16px;
+  --text-body--line-height: 1.375;
+  --text-button: 15px;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.5;
+}

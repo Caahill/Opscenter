@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    // `pnpm dev` compiles here, so `pnpm build` and the e2e run (which use dist/) never pull files
+    // out from under a running dev server.
+    "outDir": "dist-dev"
+  }
+}

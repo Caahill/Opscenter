@@ -1,0 +1,679 @@
+// Ops Hub schema (TechSpec section 4). Encrypted columns hold envelope ciphertext (Bytes) plus a key id.
+// Phase 2 fields (dependsOnId, unlockAfterDays, Holiday, health) ship now so Phase 2 needs no
+// disruptive migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PM
+  TEAM_LEADER
+  TEAM_MEMBER
+  ACCOUNTS
+  HR
+}
+
+enum Department {
+  PRE_SALES
+  ONBOARDING
+  WEB_DEV
+  AMC
+  SPEED_AUDIT
+  SEO
+  GOOGLE_ADS
+  SOCIAL_MEDIA
+  GRAPHIC_DESIGN
+}
+
+enum StatusType {
+  NOT_STARTED
+  ACTIVE
+  WAITING_ON_CLIENT
+  ON_HOLD
+  DONE
+  STOPPED
+}
+
+enum ProjectType {
+  ONE_TIME
+  RETAINER
+  AMC
+}
+
+enum Health {
+  ON_TRACK
+  AT_RISK
+  BLOCKED
+}
+
+enum Priority {
+  URGENT
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum TaskType {
+  DELIVERABLE
+  CHANGE_REQUEST
+  REPORT
+  FIX
+  INTERNAL
+  PRESALES_REQUEST
+}
+
+enum TaskSource {
+  MANUAL
+  EMAIL
+  WHATSAPP
+  TEMPLATE
+  IMPORT
+}
+
+enum Channel {
+  EMAIL
+  WHATSAPP
+}
+
+enum Direction {
+  INBOUND
+  OUTBOUND
+}
+
+enum TriageState {
+  NEW
+  SUGGESTED
+  CONFIRMED
+  DISMISSED
+  UNMATCHED
+}
+
+enum BillingReason {
+  ADDITIONAL_TASK
+  RENEWAL
+  NEW_PACKAGE
+}
+
+enum BillingStatus {
+  REQUESTED
+  INVOICED
+  PAID
+  CANCELLED
+}
+
+enum ClientStatus {
+  ACTIVE
+  PAUSED
+  CHURNED
+}
+
+enum StopReason {
+  CLIENT_PAUSED
+  CLIENT_CHURNED
+  NON_PAYMENT
+  SCOPE_CANCELLED
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique // SySpree staff email, not client PII
+  name            String
+  roles           Role[]
+  teamId          String?
+  team            Team?          @relation("TeamMembers", fields: [teamId], references: [id])
+  leads           Team[]         @relation("TeamLeader")
+  weeklyCapacityH Decimal        @default(40)
+  skills          String[]
+  timezone        String         @default("Asia/Kolkata")
+  location        String         @default("IN") // office holidays apply by location (TechSpec 9.1)
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  sessions        Session[]
+  assignedTasks   Task[]         @relation("TaskAssignee")
+  leaves          Leave[]
+  notifications   Notification[]
+}
+
+// Server-side sessions: deactivation and the 12 h idle timeout take effect on the next request.
+model Session {
+  id         String    @id // sha256 of the cookie token; the token itself is never stored
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  revokedAt  DateTime?
+  userAgent  String?
+
+  @@index([userId])
+}
+
+model Team {
+  id         String     @id @default(cuid())
+  name       String
+  department Department
+  leaderId   String?
+  leader     User?      @relation("TeamLeader", fields: [leaderId], references: [id])
+  members    User[]     @relation("TeamMembers")
+  projects   Project[]
+}
+
+model Client {
+  id              String           @id @default(cuid())
+  companyName     String
+  website         String?
+  market          String // IN, AE, SA, AU, UK, CA, US, NZ ...
+  status          ClientStatus     @default(ACTIVE)
+  pmId            String // assigned PM
+  salesOwnerId    String?
+  tags            String[]
+  emailDomains    String[] // for auto-linking; restricted
+  taxIdEnc        Bytes? // GSTIN etc, encrypted
+  contractValue   Decimal? // restricted
+  projects        Project[]
+  contacts        Contact[]
+  credentials     Credential[]
+  communications  Communication[]
+  createdAt       DateTime         @default(now())
+  billingRequests BillingRequest[]
+
+  @@index([pmId])
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  clientId  String
+  client    Client  @relation(fields: [clientId], references: [id])
+  role      String // DECISION_MAKER, MARKETING, BILLING, TECHNICAL
+  label     String // safe display label, e.g. "Marketing contact"
+  nameEnc   Bytes
+  emailEnc  Bytes?
+  phoneEnc  Bytes?
+  emailHash String? @unique // HMAC-SHA256 for lookup without decrypting
+  phoneHash String? @unique
+  keyId     String
+}
+
+model Credential {
+  id        String            @id @default(cuid())
+  clientId  String
+  client    Client            @relation(fields: [clientId], references: [id])
+  system    String // WEBSITE_ADMIN, HOSTING, GA, GSC, GMB, GOOGLE_ADS, META
+  label     String
+  secretEnc Bytes // JSON {username, password, notes}, encrypted
+  keyId     String
+  grants    CredentialGrant[]
+}
+
+model CredentialGrant {
+  id           String     @id @default(cuid())
+  credentialId String
+  credential   Credential @relation(fields: [credentialId], references: [id])
+  userId       String
+  taskId       String
+  expiresAt    DateTime // min(task close, now + 7 days)
+  grantedById  String
+  revokedAt    DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Pipeline {
+  id         String     @id @default(cuid())
+  department Department
+  version    Int
+  stages     Stage[]
+  active     Boolean    @default(true)
+
+  @@unique([department, version])
+}
+
+model Stage {
+  id         String     @id @default(cuid())
+  pipelineId String
+  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
+  name       String // never a person's name (validated)
+  order      Int
+  statusType StatusType
+  phase      String // SETUP or CYCLE
+  slaDays    Int?
+  checklist  Json // [{text, ownerRole}]
+  projects   Project[]
+}
+
+model Package {
+  id           String     @id @default(cuid())
+  department   Department
+  name         String // "SEO 30 kw / 100 BL", "Social 12 posts"
+  setupTasks   Json // task templates
+  cycleTasks   Json // monthly task templates
+  monthlyHours Decimal?
+  active       Boolean    @default(true)
+  projects     Project[]
+}
+
+model Project {
+  id                String      @id @default(cuid())
+  clientId          String
+  client            Client      @relation(fields: [clientId], references: [id])
+  department        Department
+  pipelineId        String
+  stageId           String
+  stage             Stage       @relation(fields: [stageId], references: [id])
+  packageId         String?
+  package           Package?    @relation(fields: [packageId], references: [id])
+  type              ProjectType
+  // Defaults to the stage's status type; WAITING_ON_CLIENT, ON_HOLD and STOPPED can be set at any stage.
+  statusType        StatusType  @default(NOT_STARTED)
+  startDate         DateTime?
+  endDate           DateTime?
+  renewalDate       DateTime?
+  cycleDay          Int? // day of month the cycle starts
+  health            Health      @default(ON_TRACK)
+  holdReason        String?
+  stopReason        StopReason?
+  stopNote          String?
+  pmId              String
+  teamId            String?
+  team              Team?       @relation(fields: [teamId], references: [id])
+  value             Decimal? // restricted
+  billingCycle      String? // restricted
+  parentProjectId   String? // hand-off source (e.g. WEB_DEV -> AMC)
+  memberSendEnabled Boolean     @default(false) // PRD OQ10: Team Members may email this client
+
+  tasks           Task[]
+  checklist       ChecklistItem[]
+  attachments     Attachment[]
+  cycles          ProjectCycle[]
+  stageEnteredAt  DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  billingRequests BillingRequest[]
+
+  @@index([clientId])
+  @@index([department, statusType])
+  @@index([pmId])
+  @@index([teamId])
+}
+
+// One row per generated monthly cycle; the unique key makes cycle.generate safe to rerun.
+model ProjectCycle {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  cycleMonth String // "2026-11"
+  createdAt  DateTime @default(now())
+
+  @@unique([projectId, cycleMonth])
+}
+
+// Stage entry checklist instances (projectId + stageId) and task checklists (taskId).
+model ChecklistItem {
+  id        String    @id @default(cuid())
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id])
+  stageId   String?
+  taskId    String?
+  task      Task?     @relation(fields: [taskId], references: [id])
+  text      String
+  ownerRole String?
+  ownerId   String?
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  doneById  String?
+  order     Int       @default(0)
+
+  @@index([projectId, stageId])
+  @@index([taskId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  authorId  String
+  body      String // PII-scrubbed on write
+  createdAt DateTime @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id])
+  taskId       String?
+  task         Task?    @relation(fields: [taskId], references: [id])
+  storageKey   String // shared by copies made on hand-off
+  fileName     String
+  contentType  String
+  size         Int
+  uploadedById String?
+  source       String   @default("UPLOAD") // UPLOAD, HANDOFF, IMPORT, EMAIL, WHATSAPP
+  createdAt    DateTime @default(now())
+
+  @@index([projectId])
+  @@index([taskId])
+}
+
+model Task {
+  id                String          @id @default(cuid())
+  projectId         String
+  project           Project         @relation(fields: [projectId], references: [id])
+  parentTaskId      String?
+  title             String
+  type              TaskType
+  description       String? // rich text, PII-scrubbed on write
+  assigneeId        String?
+  assignee          User?           @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  teamId            String?
+  priority          Priority        @default(NORMAL)
+  dueDate           DateTime?
+  plannedDate       DateTime? // TL planner day
+  estimateH         Decimal?
+  progressPct       Int             @default(0)
+  statusType        StatusType      @default(NOT_STARTED)
+  billable          Boolean         @default(false)
+  billableConfirmed Boolean         @default(false)
+  source            TaskSource      @default(MANUAL)
+  sourceCommId      String?
+  cycleMonth        String? // "2026-11" for cycle tasks
+  dependsOnId       String?
+  unlockAfterDays   Int?
+  createdById       String?
+  createdAt         DateTime        @default(now())
+  completedAt       DateTime?
+  checklist         ChecklistItem[]
+  comments          TaskComment[]
+  attachments       Attachment[]
+
+  @@index([assigneeId, statusType])
+  @@index([projectId, statusType])
+  @@index([teamId, statusType])
+  @@index([parentTaskId])
+  @@index([projectId, cycleMonth])
+}
+
+model Communication {
+  id              String                   @id @default(cuid())
+  channel         Channel
+  direction       Direction
+  mailboxId       String?
+  mailbox         Mailbox?                 @relation(fields: [mailboxId], references: [id])
+  externalId      String                   @unique // Gmail message id, WhatsApp wamid, or import hash
+  threadKey       String // Gmail threadId, wa:<number hash>, or wa-group:<hash>
+  clientId        String?
+  client          Client?                  @relation(fields: [clientId], references: [id])
+  projectId       String?
+  taskId          String?
+  contactId       String?
+  fromEnc         Bytes // address or number, encrypted (PII key, AAD communication:<id>)
+  fromHash        String? // HMAC of the sender, for linking and re-linking without decrypting
+  toEnc           Bytes?
+  ccEnc           Bytes?
+  subject         String? // original; served masked to non-full viewers
+  subjectMasked   String?
+  bodyMasked      String // body with addresses and numbers redacted
+  bodyEnc         Bytes // original body, encrypted
+  attachments     Json // [{ key, fileName, contentType, size }]
+  sentAt          DateTime
+  sentById        String? // staff member who sent it from Ops Hub
+  messageIdHeader String? // RFC 5322 Message-ID, for reply threading
+  importId        String?
+  linkMethod      String? // CONTACT, DOMAIN, THREAD, MANUAL
+  triageState     TriageState              @default(NEW)
+  triage          Json? // AI suggestion, see TechSpec 7.3
+  category        String? // confirmed (or suggested) category; BILLING scopes Accounts
+  triageOutcome   Json? // what the human did with the suggestion, for accuracy tracking
+  triagedById     String?
+  triagedAt       DateTime?
+  searchVector    Unsupported("tsvector")?
+  createdAt       DateTime                 @default(now())
+
+  @@index([clientId, sentAt])
+  @@index([threadKey])
+  @@index([triageState, sentAt])
+  @@index([fromHash])
+  @@index([projectId])
+  @@index([taskId])
+  @@index([searchVector], type: Gin)
+}
+
+model BillingRequest {
+  id           String           @id @default(cuid())
+  clientId     String
+  client       Client           @relation(fields: [clientId], references: [id])
+  projectId    String
+  project      Project          @relation(fields: [projectId], references: [id])
+  reason       BillingReason
+  description  String
+  amount       Decimal // visible to the client's PM, Admin and Accounts
+  currency     String           @default("INR")
+  status       BillingStatus    @default(REQUESTED)
+  invoiceNo    String?
+  invoicedAt   DateTime?
+  paidAt       DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  raisedById   String
+  taskIds      String[]
+  /// RENEWAL only: projectId and the end date being renewed, so a term is billed once.
+  renewalKey   String?          @unique
+  messages     BillingMessage[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @default(now()) @updatedAt
+
+  @@index([status, createdAt])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+// PM and Accounts talk about one request (PRD 4.4). Bodies are scrubbed with maskBody on write.
+model BillingMessage {
+  id        String         @id @default(cuid())
+  requestId String
+  request   BillingRequest @relation(fields: [requestId], references: [id])
+  authorId  String
+  body      String
+  createdAt DateTime       @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+model Leave {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  startDate   DateTime // date only, UTC midnight
+  endDate     DateTime // inclusive
+  halfDay     Boolean  @default(false) // single-day leave only
+  kind        String // PLANNED, SICK, OTHER
+  reasonEnc   Bytes? // HR and Admin only, PII key, AAD leave:<id>
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([userId, startDate])
+  @@index([startDate, endDate])
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  date      DateTime // date only, UTC midnight
+  location  String // matches User.location, e.g. IN
+  name      String
+  createdAt DateTime @default(now())
+
+  @@unique([date, location])
+}
+
+// Added in Phase 1C for leave impact alerts; Phase 1F adds email digest, push and settings.
+// Text is written already masked and holds no client contact data.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  kind      String // LEAVE_IMPACT, ...
+  title     String
+  body      String?
+  link      String? // app path, e.g. /leave/<id>
+  data      Json? // ids only
+  dedupeKey String? // one notification per user per subject, e.g. leave:<id>
+  category  String    @default("OTHER") // MENTION, ASSIGNMENT, DUE, CLIENT_MESSAGE, BILLING, TEAM, OTHER
+  readAt    DateTime?
+  emailedAt DateTime? // included in a digest
+  pushedAt  DateTime? // sent (or skipped) as push
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt])
+  @@index([emailedAt])
+}
+
+/// Per person and category: email digest and push on or off. In-app is always on. Missing row = defaults.
+model NotificationPreference {
+  userId   String
+  category String
+  email    Boolean
+  push     Boolean
+
+  @@id([userId, category])
+}
+
+/// A browser or phone that accepts web push for a person (PWA).
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+}
+
+model ChatChannel {
+  id        String        @id @default(cuid())
+  kind      String // DIRECT, TEAM, PROJECT
+  name      String?
+  projectId String?       @unique
+  teamId    String?       @unique
+  /// DIRECT only: the two user ids, sorted and joined, so a pair has one channel.
+  directKey String?       @unique
+  /// Unused since Phase 1F (membership is ChatMember or derived from team and project); drop in 1G.
+  members   String[]
+  createdAt DateTime      @default(now())
+  messages  ChatMessage[]
+  readers   ChatMember[]
+}
+
+/// DIRECT channel members, and everyone's read position in any channel they can open.
+model ChatMember {
+  channelId  String
+  channel    ChatChannel @relation(fields: [channelId], references: [id])
+  userId     String
+  lastReadAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@id([channelId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  channelId String
+  channel   ChatChannel @relation(fields: [channelId], references: [id])
+  authorId  String
+  body      String // scrubbed with maskBody on write; mention tokens like @[Name](user:id)
+  mentions  Json        @default("[]") // [{ type, id }]
+  createdAt DateTime    @default(now())
+
+  @@index([channelId, createdAt])
+}
+
+model Mailbox {
+  id                String          @id @default(cuid())
+  address           String          @unique // SySpree mailbox
+  label             String          @default("")
+  ownerUserId       String? // null = shared mailbox
+  oauthEnc          Bytes // refresh token, encrypted (vault key)
+  historyId         String?
+  watchExpiry       DateTime?
+  active            Boolean         @default(true)
+  connectedById     String?
+  lastSyncAt        DateTime?
+  syncError         String? // last error code, never message content
+  backfillFrom      DateTime?
+  backfillPageToken String?
+  backfillDoneAt    DateTime?
+  createdAt         DateTime        @default(now())
+  communications    Communication[]
+}
+
+// When each person last opened each thread: drives the "New" highlight and unread threads.
+model ThreadRead {
+  userId     String
+  threadKey  String
+  lastReadAt DateTime
+
+  @@id([userId, threadKey])
+}
+
+// Raw webhook payloads, stored encrypted before processing (TechSpec 2: verify, store, enqueue).
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  source      String // GMAIL, WHATSAPP
+  payloadEnc  Bytes // PII key, AAD webhook:<id>
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  attempts    Int       @default(0)
+  error       String?
+
+  @@index([processedAt])
+}
+
+// Route B: an uploaded WhatsApp chat export (TechSpec 7.2).
+model WhatsAppImport {
+  id           String   @id @default(cuid())
+  clientId     String
+  projectId    String?
+  fileName     String
+  uploadedById String
+  messages     Int      @default(0)
+  duplicates   Int      @default(0)
+  media        Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  actorId  String
+  action   String // VIEW_UNMASKED, REVEAL_CREDENTIAL, ROLE_CHANGE, EXPORT, ...
+  entity   String
+  entityId String
+  meta     Json
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([at])
+}
+
+model ActivityLog {
+  // stage moves, status changes, assignments (business history)
+  id        String   @id @default(cuid())
+  actorId   String?
+  projectId String?
+  taskId    String?
+  kind      String
+  from      Json?
+  to        Json?
+  at        DateTime @default(now())
+}

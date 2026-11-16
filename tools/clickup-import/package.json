@@ -1,0 +1,21 @@
+{
+  "name": "@opshub/clickup-import",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@opshub/db": "workspace:*",
+    "@opshub/policy": "workspace:*",
+    "yaml": "2.9.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15",
+    "vitest": "3.2.7"
+  }
+}
