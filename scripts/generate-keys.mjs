@@ -1,5 +1,6 @@
 // Prints random 32-byte base64 keys for local development, and a web push (VAPID) key pair.
 // Paste them into .env. With --write, fills any empty key in .env (creating it from .env.example).
+// With --railway, also prints a STAGING_PASSWORD, for the staging (demo) site. Nothing is saved.
 import { createECDH, randomBytes } from 'node:crypto';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -16,6 +17,8 @@ function vapid() {
 if (!process.argv.includes('--write')) {
   for (const name of NAMES) console.log(`${name}=${key()}`);
   for (const [name, value] of Object.entries(vapid())) console.log(`${name}=${value}`);
+  // 24 random bytes as base64url: 32 characters, easy to paste, impossible to guess.
+  if (process.argv.includes('--railway')) console.log(`STAGING_PASSWORD=${randomBytes(24).toString('base64url')}`);
   process.exit(0);
 }
 

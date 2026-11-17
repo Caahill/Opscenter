@@ -10,7 +10,7 @@ if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 async function main() {
   const env = loadEnv();
   const app = await createApp(env);
-  const port = Number(new URL(env.API_URL).port || 4000);
+  const port = env.PORT ?? Number(new URL(env.API_URL).port || 4000);
   await app.listen(port);
 }
 

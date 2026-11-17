@@ -23,9 +23,9 @@ export class StorageService {
     this.s3 =
       env.STORAGE_DRIVER === 's3'
         ? new S3Client({
-            region: env.AWS_REGION,
+            region: env.S3_REGION || env.AWS_REGION,
             endpoint: env.S3_ENDPOINT || undefined,
-            forcePathStyle: Boolean(env.S3_ENDPOINT),
+            forcePathStyle: env.S3_FORCE_PATH_STYLE ? env.S3_FORCE_PATH_STYLE === 'true' : Boolean(env.S3_ENDPOINT),
             credentials:
               env.S3_ACCESS_KEY && env.S3_SECRET_KEY
                 ? { accessKeyId: env.S3_ACCESS_KEY, secretAccessKey: env.S3_SECRET_KEY }

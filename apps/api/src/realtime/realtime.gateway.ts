@@ -10,7 +10,8 @@ import type { Namespace, Socket } from 'socket.io';
 import { AuditService } from '../audit/audit.service';
 import { SessionService } from '../auth/session.service';
 import type { AuthedViewer } from '../common/request';
-import { ENV, type Env } from '../config/env';
+import { passesGate } from '../common/staging-gate';
+import { ENV, isStaging, type Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 
 export { REALTIME_PATH };
@@ -26,7 +27,9 @@ const cookieValue = (header: string | undefined, name: string) =>
     .find((p) => p.startsWith(`${name}=`))
     ?.slice(name.length + 1);
 
-@WebSocketGateway({ namespace: '/rt', path: REALTIME_PATH, serveClient: false })
+// No trailing slash on the path: deployed, the web's /api/v1 rewrite forwards the live connection,
+// and Next.js answers paths ending in "/" with a redirect, which ends a websocket upgrade.
+@WebSocketGateway({ namespace: '/rt', path: REALTIME_PATH, serveClient: false, addTrailingSlash: false })
 export class RealtimeGateway implements OnGatewayConnection {
   private readonly log = new Logger('Realtime');
   @WebSocketServer() server!: Namespace;
@@ -40,6 +43,7 @@ export class RealtimeGateway implements OnGatewayConnection {
     const origin = socket.handshake.headers.origin;
     const allowed = [this.env.APP_URL, this.env.API_URL].map((u) => new URL(u).origin);
     if (origin && !allowed.includes(origin)) return socket.disconnect(true);
+    if (isStaging(this.env) && !passesGate(this.env.STAGING_PASSWORD!, socket.handshake.headers)) return socket.disconnect(true);
     const resolved = await this.sessions.resolve(decodeURIComponent(cookieValue(socket.handshake.headers.cookie, SESSION_COOKIE) ?? ''));
     if (!resolved) return socket.disconnect(true);
     socket.data.userId = resolved.viewer.userId;

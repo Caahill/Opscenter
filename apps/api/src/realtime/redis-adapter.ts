@@ -9,7 +9,7 @@ export class RedisIoAdapter extends IoAdapter {
 
   /** False when Redis is not reachable; the default in-process adapter is then kept. */
   async connect(url: string): Promise<boolean> {
-    const pub = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
+    const pub = new Redis(url, { family: 0, lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
     pub.on('error', () => {});
     try {
       await pub.connect();

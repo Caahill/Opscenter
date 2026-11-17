@@ -4,8 +4,9 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { API_PREFIX } from '@opshub/shared';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import type { Env } from './config/env';
+import { isStaging, type Env } from './config/env';
 import { accessLog, originCheck, requestId } from './common/http.middleware';
+import { stagingGate } from './common/staging-gate';
 import { createLogger, PinoNestLogger } from './logging/logger';
 import { UNPREFIXED_PATHS } from './policy/route-audit';
 import { RedisIoAdapter } from './realtime/redis-adapter';
@@ -28,6 +29,8 @@ export async function createApp(env: Env, extra: { controllers?: Type[] } = {}):
   });
   app.use(requestId());
   app.use(accessLog(logger));
+  // The demo site: nothing but the health check answers without the staging password.
+  if (isStaging(env)) app.use(stagingGate(env.STAGING_PASSWORD!));
   app.use(cookieParser());
   app.use(originCheck([env.APP_URL, env.API_URL]));
   app.setGlobalPrefix(API_PREFIX, { exclude: UNPREFIXED_PATHS });

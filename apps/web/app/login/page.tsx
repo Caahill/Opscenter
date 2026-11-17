@@ -1,6 +1,7 @@
 import { Card, Chip, Label } from '@opshub/ui';
 import type { DevUserView } from '@opshub/shared';
 import { isDevAuth } from '@/lib/api';
+import { gateHeaders } from '@/lib/staging-gate';
 import { DevLogin } from './dev-login';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:4000';
@@ -14,7 +15,7 @@ const ERRORS: Record<string, string> = {
 };
 
 async function devUsers(): Promise<DevUserView[]> {
-  const res = await fetch(`${API_URL}/api/v1/auth/dev/users`, { cache: 'no-store' }).catch(() => null);
+  const res = await fetch(`${API_URL}/api/v1/auth/dev/users`, { cache: 'no-store', headers: gateHeaders() }).catch(() => null);
   return res?.ok ? ((await res.json()) as DevUserView[]) : [];
 }
 
@@ -43,7 +44,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               <Chip tone="warning">AUTH_MODE=dev</Chip>
             </div>
             <p className="mt-2 text-[15px] text-muted">
-              Pick a seed user to see Ops Hub as that role. Only available on local and test setups.
+              Pick a seed user to see Ops Hub as that role. Only available on local, test and staging setups.
             </p>
             {users.length > 0 ? (
               <DevLogin users={users} />

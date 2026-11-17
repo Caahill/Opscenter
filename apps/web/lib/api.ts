@@ -3,6 +3,7 @@
 import type { ApiError, MeView } from '@opshub/shared';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { gateHeaders } from './staging-gate';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:4000';
 
@@ -19,7 +20,7 @@ export class ApiRequestError extends Error {
 export async function api<T>(path: string, opts: { allowForbidden?: boolean } = {}): Promise<T> {
   const cookieHeader = (await cookies()).toString();
   const res = await fetch(`${API_URL}/api/v1${path}`, {
-    headers: { cookie: cookieHeader, accept: 'application/json' },
+    headers: { cookie: cookieHeader, accept: 'application/json', ...gateHeaders() },
     cache: 'no-store',
   });
   if (res.status === 401) redirect('/login');
@@ -48,8 +49,9 @@ export const getMe = () => api<MeView>('/me');
 export const isDevAuth = () => (process.env.AUTH_MODE ?? 'dev') === 'dev';
 
 /**
- * Where the browser opens its live connection. In production the load balancer routes /api/* on
- * the app's own origin to the API (''); locally the browser reaches the API port directly, since
- * the /api/v1 rewrite does not carry websockets.
+ * Where the browser opens its live connection. Deployed (`next start`), this origin (''): the
+ * /api/v1 rewrite forwards the websocket upgrade to the API over the private network, with the
+ * session and gate cookies. `next dev` does not forward upgrades, so locally the browser reaches the
+ * API port directly.
  */
 export const realtimeUrl = () => process.env.REALTIME_URL ?? (process.env.NODE_ENV === 'production' ? '' : API_URL);

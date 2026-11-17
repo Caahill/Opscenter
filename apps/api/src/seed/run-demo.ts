@@ -2,7 +2,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaClient } from '@opshub/db';
-import { loadEnv } from '../config/env';
+import { isStaging, loadEnv } from '../config/env';
 import { CryptoService } from '../crypto/crypto.service';
 import { createKeyProvider } from '../crypto/key-providers';
 import { seedDemo } from './demo-seed';
@@ -12,7 +12,7 @@ if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 async function main() {
   const env = loadEnv();
-  if (env.NODE_ENV === 'production') throw new Error('Demo data is never seeded in production');
+  if (env.NODE_ENV === 'production' && !isStaging(env)) throw new Error('Demo data is never seeded in production');
   const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
   try {
     const { clients, leave, inbox, billing } = await seedDemo(prisma, new CryptoService(createKeyProvider(env), env));

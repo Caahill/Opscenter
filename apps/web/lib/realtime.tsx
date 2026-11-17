@@ -16,7 +16,7 @@ export function RealtimeProvider({ url, children }: { url: string; children: Rea
   const socket = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const s = io(`${url}/rt`, { path: REALTIME_PATH, transports: ['websocket'], withCredentials: true });
+    const s = io(`${url}/rt`, { path: REALTIME_PATH, addTrailingSlash: false, transports: ['websocket'], withCredentials: true });
     socket.current = s;
     s.on('connect', () => setConnected(true));
     s.on('disconnect', () => setConnected(false));

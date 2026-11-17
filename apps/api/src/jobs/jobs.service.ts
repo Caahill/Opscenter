@@ -41,7 +41,7 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
 
   async onApplicationBootstrap() {
     if (!this.env.REDIS_URL || this.env.NODE_ENV === 'test') return;
-    const probe = new Redis(this.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
+    const probe = new Redis(this.env.REDIS_URL, { family: 0, lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
     probe.on('error', () => {});
     try {
       await probe.connect();
@@ -52,7 +52,7 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
     } finally {
       probe.disconnect();
     }
-    this.connection = new Redis(this.env.REDIS_URL, { maxRetriesPerRequest: null });
+    this.connection = new Redis(this.env.REDIS_URL, { family: 0, maxRetriesPerRequest: null });
     this.queue = new Queue(QUEUE, { connection: this.connection });
     this.deadLetter = new Queue(DEAD_LETTER, { connection: this.connection });
     for (const s of this.schedules) {

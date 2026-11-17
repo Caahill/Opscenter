@@ -10,7 +10,7 @@ const DEAD_LETTER = 'opshub-dead-letter';
 const ATTEMPTS = 5;
 
 async function redisReachable(url: string): Promise<boolean> {
-  const probe = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
+  const probe = new Redis(url, { family: 0, lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: () => null });
   probe.on('error', () => {});
   try {
     await probe.connect();
@@ -25,12 +25,14 @@ async function redisReachable(url: string): Promise<boolean> {
 
 async function main() {
   if (!(await redisReachable(env.REDIS_URL))) {
-    // Phase 1A has no job that the UI depends on, so a missing Redis should not stop `pnpm dev`.
+    // Deployed: fail so the platform restarts the worker once Redis is up.
+    if (env.NODE_ENV === 'production') throw new Error('Redis not reachable; restarting');
+    // Locally a missing Redis should not stop `pnpm dev`.
     logger.warn(`Redis not reachable at ${env.REDIS_URL}; worker idle. Start it with \`docker compose up -d redis\`.`);
     return;
   }
 
-  const connection = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  const connection = new Redis(env.REDIS_URL, { family: 0, maxRetriesPerRequest: null });
   const prisma = new PrismaClient();
   const queue = new Queue(QUEUE, { connection });
   const deadLetter = new Queue(DEAD_LETTER, { connection });

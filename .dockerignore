@@ -1,0 +1,22 @@
+# Railway builds each service from the repo root with its own Dockerfile (apps/*/Dockerfile).
+# Never send secrets, local data or build output into an image.
+.git
+**/node_modules
+**/dist
+**/dist-dev
+**/.next
+**/.next-dev
+**/.next-e2e
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+**/playwright-report
+**/test-results
+.env
+.env.*
+!.env.example
+**/.local-*
+**/jar-*
+import-report
+docs
+.DS_Store

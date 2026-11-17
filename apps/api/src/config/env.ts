@@ -4,9 +4,22 @@ const base64Key = z
   .string()
   .refine((v) => Buffer.from(v, 'base64').length === 32, 'must be 32 bytes, base64 (pnpm keys:generate)');
 
+/** An empty value in .env (`APP_ENV=`) means unset. */
+const blankAsUnset = <T extends z.ZodTypeAny>(schema: T) => z.preprocess((v) => (v === '' ? undefined : v), schema.optional());
+
 const EnvSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    /**
+     * Which deployed environment this is; required when NODE_ENV=production. `staging` is the demo
+     * site: it may use local keys, fakes, dev login and file mail, and sits behind STAGING_PASSWORD.
+     * `production` keeps every production check.
+     */
+    APP_ENV: blankAsUnset(z.enum(['staging', 'production'])),
+    /** Site-wide password for staging (the web shows a password page; the API checks the gate). */
+    STAGING_PASSWORD: z.string().optional(),
+    /** Port to listen on; the platform sets it. Falls back to the API_URL port, then 4000. */
+    PORT: blankAsUnset(z.coerce.number().int().min(1).max(65535)),
     APP_URL: z.string().url().default('http://localhost:3000'),
     API_URL: z.string().url().default('http://localhost:4000'),
     DATABASE_URL: z.string().min(1),
@@ -26,6 +39,10 @@ const EnvSchema = z
     S3_BUCKET: z.string().default('opshub-local'),
     S3_ACCESS_KEY: z.string().optional(),
     S3_SECRET_KEY: z.string().optional(),
+    /** Bucket region; defaults to AWS_REGION. Railway buckets use `auto`. */
+    S3_REGION: z.string().optional(),
+    /** Path-style URLs (MinIO). Defaults to on when S3_ENDPOINT is set; Railway buckets need false. */
+    S3_FORCE_PATH_STYLE: blankAsUnset(z.enum(['true', 'false'])),
     MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(25),
 
     REDIS_URL: z.string().optional(),
@@ -118,9 +135,18 @@ const EnvSchema = z
       need('WHATSAPP_VERIFY_TOKEN', 'WHATSAPP_MODE=live');
     }
     if (env.AI_MODE === 'live') need('ANTHROPIC_API_KEY', 'AI_MODE=live');
-    if (env.NODE_ENV === 'production') {
+    if (env.APP_ENV === 'staging') {
+      if (!env.STAGING_PASSWORD || env.STAGING_PASSWORD.length < 16) {
+        ctx.addIssue({ code: 'custom', path: ['STAGING_PASSWORD'], message: 'required on staging, at least 16 characters (pnpm keys:generate --railway)' });
+      }
+    }
+    if (env.NODE_ENV === 'production' && !env.APP_ENV) {
+      ctx.addIssue({ code: 'custom', path: ['APP_ENV'], message: 'required when NODE_ENV=production (staging or production)' });
+    }
+    // Staging (the demo site, no real client data) may use local keys, fakes, dev login and file
+    // mail. Everything else, and every production check, applies to both.
+    if (env.NODE_ENV === 'production' && env.APP_ENV !== 'staging') {
       if (env.MAIL_MODE === 'file') ctx.addIssue({ code: 'custom', path: ['MAIL_MODE'], message: 'email must go out over SMTP in production' });
-      if (!env.PUSH_VAPID_PUBLIC_KEY || !env.PUSH_VAPID_PRIVATE_KEY) ctx.addIssue({ code: 'custom', path: ['PUSH_VAPID_PUBLIC_KEY'], message: 'push needs VAPID keys in production (pnpm keys:generate)' });
       for (const key of ['GMAIL_MODE', 'WHATSAPP_MODE', 'AI_MODE'] as const) {
         if (env[key] === 'fake') ctx.addIssue({ code: 'custom', path: [key], message: 'fakes are not allowed in production' });
       }
@@ -130,6 +156,9 @@ const EnvSchema = z
       if (env.KMS_MODE === 'local') {
         ctx.addIssue({ code: 'custom', path: ['KMS_MODE'], message: 'local keys are not allowed in production' });
       }
+    }
+    if (env.NODE_ENV === 'production') {
+      if (!env.PUSH_VAPID_PUBLIC_KEY || !env.PUSH_VAPID_PRIVATE_KEY) ctx.addIssue({ code: 'custom', path: ['PUSH_VAPID_PUBLIC_KEY'], message: 'push needs VAPID keys in production (pnpm keys:generate)' });
       if (env.STORAGE_DRIVER === 'fs') {
         ctx.addIssue({ code: 'custom', path: ['STORAGE_DRIVER'], message: 'local file storage is not allowed in production' });
       }
@@ -150,6 +179,12 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   return parsed.data;
 }
 
+/** The demo site: behind STAGING_PASSWORD, never holding real client data. */
+export function isStaging(env: Env): boolean {
+  return env.APP_ENV === 'staging';
+}
+
+/** Dev login: local, test and staging only. The schema refuses it in production. */
 export function isDevAuth(env: Env): boolean {
-  return env.AUTH_MODE === 'dev' && env.NODE_ENV !== 'production';
+  return env.AUTH_MODE === 'dev' && (env.NODE_ENV !== 'production' || isStaging(env));
 }
