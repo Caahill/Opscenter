@@ -66,6 +66,12 @@ export function useAction() {
       router.refresh();
       return out;
     } catch (e) {
+      if (e instanceof SendError && e.status === 401) {
+        // Signed out in another tab, or the session expired: say so and go to sign-in.
+        setError('You were signed out. Taking you to sign in…');
+        setTimeout(() => router.push('/login'), 1200);
+        return undefined;
+      }
       setError(e instanceof Error ? e.message : 'Something went wrong');
       return undefined;
     } finally {
