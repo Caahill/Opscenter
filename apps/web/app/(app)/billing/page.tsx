@@ -1,5 +1,5 @@
 import { BILLING_REASON_LABELS, BILLING_STATUS_LABELS, BILLING_STATUSES, DEPARTMENT_LABELS, type BillingRequestView, type BillingStatus, type MeView, type RenewalView } from '@opshub/shared';
-import { Card, Chip, Masked, PageHeader } from '@opshub/ui';
+import { Card, Chip, EmptyState, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -41,7 +41,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
       {tab === 'renewals' ? (
         <Card className="p-0">
-          {renewals.length === 0 ? <p className="px-5 py-8 text-center text-muted">No retainers or AMCs end in the next 30 days.</p> : null}
+          {renewals.length === 0 ? <EmptyState title="No renewals due soon" hint="Retainers and AMCs ending in the next 30 days will be listed here." /> : null}
           <ul className="divide-y divide-surface-alt">
             {renewals.map((r) => (
               <li key={r.projectId} className="flex flex-wrap items-start justify-between gap-3 px-5 py-3" data-testid="renewal-row">

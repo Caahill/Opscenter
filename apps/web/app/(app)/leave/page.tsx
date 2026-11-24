@@ -1,5 +1,5 @@
 import { LEAVE_KIND_LABELS, todayIn, DEFAULT_TIMEZONE, type HolidayView, type LeaveView, type UserView } from '@opshub/shared';
-import { Card, Label, Masked, PageHeader } from '@opshub/ui';
+import { Card, EmptyState, Label, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, getMe } from '@/lib/api';
 import { formatDay, formatLeave } from '@/lib/format';
@@ -35,7 +35,7 @@ export default async function LeavePage() {
             <Label>Current and upcoming</Label>
           </div>
           {leave.length === 0 ? (
-            <p className="px-5 py-8 text-center text-muted">No leave recorded from today on.</p>
+            <EmptyState title="No upcoming leave" hint="Leave recorded from today onwards will show here, with the tasks it affects." />
           ) : (
             <ul className="divide-y divide-surface-alt">
               {leave.map((l) => (

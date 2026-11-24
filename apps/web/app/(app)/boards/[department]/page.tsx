@@ -67,7 +67,7 @@ export default async function BoardPage({ params, searchParams }: { params: Prom
 
   return (
     <>
-      <PageHeader title={`${DEPARTMENT_LABELS[dept]} board`} description={`Pipeline version ${board.pipelineVersion}. ${projects.length} project${projects.length === 1 ? '' : 's'}.`} />
+      <PageHeader title={`${DEPARTMENT_LABELS[dept]} board`} description={`${projects.length} ${projects.length === 1 ? 'project' : 'projects'} · stages version ${board.pipelineVersion}`} />
 
       <nav className="mb-4 flex gap-2 overflow-x-auto pb-1" aria-label="Departments">
         {DEPARTMENTS.map((d) => (

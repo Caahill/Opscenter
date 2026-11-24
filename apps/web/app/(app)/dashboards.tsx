@@ -37,13 +37,21 @@ function Section({ title, children, testId }: { title: string; children: ReactNo
 
 function Stat({ label, value, href, tone }: { label: string; value: ReactNode; href?: string; tone?: 'warning' | 'error' }) {
   const body = (
-    <Card className="h-full">
-      <Label>{label}</Label>
-      <p className={`mt-2 font-display text-[32px] font-[650] leading-none tracking-[-0.03em] ${tone === 'error' ? 'text-error' : tone === 'warning' ? 'text-warning' : ''}`}>{value}</p>
+    <Card className={`h-full transition-colors ${href ? 'group-hover:border-border-strong' : ''}`}>
+      <div className="flex items-start justify-between gap-2">
+        <Label>{label}</Label>
+        {href ? (
+          <span aria-hidden className="text-[14px] text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-accent">
+            →
+          </span>
+        ) : null}
+      </div>
+      {/* Amber, not the bright warning yellow: it has to stay readable on white. */}
+      <p className={`mt-2 font-display text-[32px] font-[650] leading-none tracking-[-0.03em] ${tone === 'error' ? 'text-error' : tone === 'warning' ? 'text-[#b45309]' : ''}`}>{value}</p>
     </Card>
   );
   return href ? (
-    <Link href={href} className="block hover:opacity-90" data-testid={`stat-${label}`}>
+    <Link href={href} className="group block" data-testid={`stat-${label}`}>
       {body}
     </Link>
   ) : (
@@ -58,7 +66,7 @@ function ListCard({ title, empty, children, count }: { title: string; empty: str
     <Card className="p-0">
       <div className="flex items-baseline justify-between px-4 pt-4">
         <Label>{title}</Label>
-        <span className="font-mono text-[12px] text-muted">{count}</span>
+        <span className={`rounded-full px-2 text-[12px] font-semibold ${count ? 'bg-pale-purple text-accent-pressed' : 'bg-surface-alt text-muted'}`}>{count}</span>
       </div>
       {count === 0 ? <p className="px-4 py-5 text-[14px] text-muted">{empty}</p> : <ul className="mt-2 divide-y divide-surface-alt">{children}</ul>}
     </Card>

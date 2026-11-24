@@ -1,5 +1,5 @@
 import { CHANNELS, type MeView, type SearchResultsView } from '@opshub/shared';
-import { Card, Label, PageHeader } from '@opshub/ui';
+import { Card, EmptyState, Label, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { PriorityChip, StatusChip } from '@/lib/chips';
@@ -81,7 +81,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 </ul>
               </Card>
             ) : null}
-            {total === 0 ? <p className="text-muted">Nothing found.</p> : null}
+            {total === 0 ? <EmptyState title="Nothing found" hint="Try the client name plus one word, e.g. “Demo renewal”, or widen the dates." /> : null}
           </div>
         </>
       ) : null}

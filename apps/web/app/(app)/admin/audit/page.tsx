@@ -40,9 +40,17 @@ const actionLabel = (a: string) => ACTION_LABELS[a] ?? a;
 /** Filter buttons, most sensitive first. */
 const FILTERS = ['REVEAL_CREDENTIAL', 'VIEW_UNMASKED', 'ROLE_CHANGE', 'USER_CREATED', 'USER_DEACTIVATED', 'LOGIN'];
 
+/** "client.contractValue" -> "contract value", for people reading the log. */
+const fieldName = (f: unknown) =>
+  String(f)
+    .split('.')
+    .pop()!
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase();
+
 function describe(row: AuditLogView): string {
   const meta = row.meta as Record<string, unknown>;
-  if (row.action === 'VIEW_UNMASKED' && Array.isArray(meta.fields)) return `${row.entity}: ${meta.fields.join(', ')}`;
+  if (row.action === 'VIEW_UNMASKED' && Array.isArray(meta.fields)) return `${row.entity}: ${[...new Set(meta.fields.map(fieldName))].join(', ')}`;
   if (row.action === 'ROLE_CHANGE') return `${(meta.from as string[]).join(', ')} to ${(meta.to as string[]).join(', ')}`;
   if (row.action === 'USER_DEACTIVATED') return `${plural(Number(meta.tasksReassigned), 'task')} reassigned, ${plural(Number(meta.grantsRevoked), 'grant')} revoked`;
   if (row.action === 'LOGIN') return `via ${String(meta.method)}`;

@@ -1,5 +1,5 @@
 import type { NotificationListView } from '@opshub/shared';
-import { Card, PageHeader } from '@opshub/ui';
+import { Card, EmptyState, PageHeader } from '@opshub/ui';
 import { api, getMe } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import { MarkAllRead, OpenAlert } from './alert-actions';
@@ -11,7 +11,7 @@ export default async function NotificationsPage() {
       <PageHeader title="Alerts" description="Mentions, assignments, client messages, billing and leave. Choose what also reaches you by email or push in Notification settings." actions={list.unread ? <MarkAllRead /> : null} />
       <Card className="p-0">
         {list.items.length === 0 ? (
-          <p className="px-5 py-8 text-center text-muted">No alerts.</p>
+          <EmptyState title="You’re all caught up" hint="Mentions, new tasks, client messages and billing updates will appear here." />
         ) : (
           <ul className="divide-y divide-surface-alt">
             {list.items.map((n) => (

@@ -11,7 +11,7 @@ export default async function PolicyPreviewPage() {
   return (
     <>
       <PageHeader
-        title="Policy preview"
+        title="Privacy preview"
         description="One invented client, Demo Co, as the API sends it to you. Sign in as another role to compare. Nothing here is hidden by the browser: fields you cannot see were never sent."
       />
       <div className="mb-6 flex flex-wrap items-center gap-2 text-[14px] text-muted">

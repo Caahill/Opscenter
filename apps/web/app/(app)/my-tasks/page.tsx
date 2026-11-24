@@ -1,5 +1,5 @@
 import type { MeView, TaskView } from '@opshub/shared';
-import { Card, Chip, PageHeader } from '@opshub/ui';
+import { Card, Chip, EmptyState, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { TaskRow } from './task-row';
@@ -22,7 +22,10 @@ export default async function MyTasksPage({ searchParams }: { searchParams: Prom
       </div>
       <Card className="p-0">
         {tasks.length === 0 ? (
-          <p className="px-4 py-8 text-center text-muted">Nothing due {range === 'today' ? 'today' : 'this week'}.</p>
+          <EmptyState
+            title={`Nothing due ${range === 'today' ? 'today' : 'this week'}`}
+            hint="Tasks assigned to you show up here, most urgent first. Nice work if you’ve cleared them!"
+          />
         ) : (
           <ul className="divide-y divide-surface-alt">
             {tasks.map((t) => (

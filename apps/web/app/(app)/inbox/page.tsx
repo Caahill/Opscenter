@@ -1,5 +1,5 @@
 import type { InboxView, MeView, ThreadListView } from '@opshub/shared';
-import { Card, Chip, PageHeader } from '@opshub/ui';
+import { Card, Chip, EmptyState, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, isDevAuth } from '@/lib/api';
 import { AutoRefresh } from '@/lib/auto-refresh';
@@ -74,7 +74,10 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 
       <Card className="p-0">
         {list.threads.length === 0 ? (
-          <p className="px-4 py-8 text-center text-muted">{view === 'triage' ? 'Nothing waiting for triage.' : 'No messages here.'}</p>
+          <EmptyState
+            title={view === 'triage' ? 'Nothing waiting for triage' : 'No messages here'}
+            hint={view === 'triage' ? 'Every client message has been dealt with.' : 'Client emails and WhatsApp messages you can see will appear here.'}
+          />
         ) : (
           <ul className="divide-y divide-surface-alt">
             {list.threads.map((t) => (

@@ -1,5 +1,5 @@
 import { MARKETS, type ClientView, type MeView } from '@opshub/shared';
-import { Card, Chip, PageHeader } from '@opshub/ui';
+import { Card, Chip, EmptyState, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { NewClientForm } from './new-client-form';
@@ -50,7 +50,11 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
               </div>
             </li>
           ))}
-          {clients.length === 0 ? <li className="px-4 py-8 text-center text-muted">No clients found.</li> : null}
+          {clients.length === 0 ? (
+            <li>
+              <EmptyState title="No clients found" hint="Try a different name or website, or set the market back to “Any market”." />
+            </li>
+          ) : null}
         </ul>
       </Card>
     </>

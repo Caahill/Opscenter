@@ -1,5 +1,5 @@
 import { DEPARTMENT_LABELS, type TeamView } from '@opshub/shared';
-import { Card, PageHeader } from '@opshub/ui';
+import { Card, EmptyState, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { api, getMe } from '@/lib/api';
@@ -27,7 +27,7 @@ export default async function PlannerIndex() {
             </Card>
           </Link>
         ))}
-        {list.length === 0 ? <p className="text-muted">No teams with members yet.</p> : null}
+        {list.length === 0 ? <EmptyState title="No teams to plan yet" hint="An Admin can add people to teams in Admin → Teams." /> : null}
       </div>
     </>
   );

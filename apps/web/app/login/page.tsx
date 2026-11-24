@@ -26,9 +26,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-4 py-12">
-      <p className="font-mono text-[13px] text-muted">SySpree Digital</p>
-      <h1 className="mt-1 font-display text-[34px] font-[650] leading-tight tracking-[-0.035em]">Ops Hub</h1>
-      <p className="mt-2 text-muted">Client delivery, inbox, capacity and billing in one place.</p>
+      <div className="flex items-center gap-3">
+        <span aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary font-display text-[16px] font-bold text-on-primary">
+          OH
+        </span>
+        <div>
+          <h1 className="font-display text-[30px] font-[650] leading-tight tracking-[-0.035em]">Ops Hub</h1>
+          <p className="text-[13px] text-muted">SySpree Digital</p>
+        </div>
+      </div>
+      <p className="mt-4 text-muted">Projects, client messages, team capacity and billing, all in one place.</p>
 
       {error ? (
         <p role="alert" className="mt-6 rounded-lg border border-error/40 bg-[#fdecec] px-4 py-3 text-[15px] text-[#9b1c20]">
@@ -40,17 +47,20 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         {dev ? (
           <>
             <div className="flex items-center justify-between">
-              <Label>Developer sign-in</Label>
-              <Chip tone="warning">AUTH_MODE=dev</Chip>
+              <Label>Choose your name to sign in</Label>
+              <Chip tone="warning">Demo</Chip>
             </div>
             <p className="mt-2 text-[15px] text-muted">
-              Pick a seed user to see Ops Hub as that role. Only available on local, test and staging setups.
+              This is the demo version with practice data. Please pick only the name you were given, and don’t enter real client details.
             </p>
             {users.length > 0 ? (
               <DevLogin users={users} />
             ) : (
               <p className="mt-4 text-[15px]">
-                No users found. Is the API running on {API_URL}, and have you run <code className="font-mono">pnpm db:seed</code>?
+                No users are available right now. Please try again in a minute, or tell the Ops Hub admin.
+                <span className="mt-1 block text-[13px] text-muted">
+                  (For developers: is the API running on {API_URL}, and has <code className="font-mono">pnpm db:seed</code> run?)
+                </span>
               </p>
             )}
           </>

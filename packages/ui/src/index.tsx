@@ -41,7 +41,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 
 export type ChipTone = 'neutral' | 'accent' | 'success' | 'warning' | 'muted' | 'danger';
 
-/** app-chip: mono label on a pale pill, for roles, departments and phase tags. */
+/** app-chip: short label on a pale pill, for statuses, roles, departments and phase tags. */
 export function Chip({
   tone = 'neutral',
   className,
@@ -57,15 +57,15 @@ export function Chip({
   } as const;
   return (
     <span
-      className={cx('inline-flex items-center rounded-full px-3 py-1 font-mono text-[13px] font-medium', tones[tone], className)}
+      className={cx('inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold tracking-normal', tones[tone], className)}
       {...props}
     />
   );
 }
 
-/** Mono section label (typography.label), used above groups of content. */
+/** Small uppercase section label, used above groups of content. */
 export function Label({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx('font-mono text-[13px] font-medium uppercase tracking-wide text-muted', className)} {...props} />;
+  return <p className={cx('text-[12px] font-semibold uppercase tracking-[0.06em] text-muted', className)} {...props} />;
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
@@ -120,3 +120,23 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 
 export const inputClass =
   'w-full rounded-lg border border-border bg-canvas px-3 py-2 text-[15px] text-body outline-none focus:border-accent focus:ring-2 focus:ring-pale-purple';
+
+/**
+ * A friendly "nothing here yet" block: what the list is for, and what to do next.
+ * Use inside a Card or list; `action` is usually a Link or Button.
+ */
+export function EmptyState({ title, hint, action, className }: { title: string; hint?: ReactNode; action?: ReactNode; className?: string }) {
+  return (
+    <div className={cx('flex flex-col items-center px-6 py-10 text-center', className)}>
+      <span aria-hidden className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-alt text-muted">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 13h4l2 3h4l2-3h4" />
+          <path d="M5.5 6.5 4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5l-1.5-6.5A2 2 0 0 0 16.6 5H7.4a2 2 0 0 0-1.9 1.5Z" />
+        </svg>
+      </span>
+      <p className="font-semibold text-body">{title}</p>
+      {hint ? <p className="mt-1 max-w-md text-[14px] text-muted">{hint}</p> : null}
+      {action ? <div className="mt-4">{action}</div> : null}
+    </div>
+  );
+}
