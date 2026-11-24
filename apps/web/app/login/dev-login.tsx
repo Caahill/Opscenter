@@ -1,6 +1,6 @@
 'use client';
 import { ROLE_LABELS, type DevUserView } from '@opshub/shared';
-import { Chip } from '@opshub/ui';
+import { Button, Chip } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { send } from '@/lib/client';
@@ -28,11 +28,12 @@ export function DevLogin({ users }: { users: DevUserView[] }) {
       <ul className="divide-y divide-surface-alt overflow-hidden rounded-lg border border-border">
         {users.map((u) => (
           <li key={u.id}>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => signIn(u.id)}
               disabled={busy !== null}
-              className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface disabled:opacity-60"
+              className="h-auto min-h-12 w-full justify-between gap-3 rounded-none px-4 py-3 text-left font-normal whitespace-normal disabled:opacity-60"
             >
               <span>
                 <span className="block text-[15px] font-semibold">{u.name}</span>
@@ -45,7 +46,7 @@ export function DevLogin({ users }: { users: DevUserView[] }) {
                   </Chip>
                 ))}
               </span>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

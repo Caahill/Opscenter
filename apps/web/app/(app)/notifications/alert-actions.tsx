@@ -12,9 +12,9 @@ export function OpenAlert({ id, link, title, unread }: { id: string; link: strin
     router.refresh();
   }
   return (
-    <button type="button" onClick={open} className={`text-left hover:text-link ${unread ? 'font-semibold' : ''}`}>
+    <Button type="button" variant="link" size="inline" onClick={open} className={`h-auto text-left whitespace-normal text-body ${unread ? 'font-semibold' : 'font-normal'}`}>
       {title}
-    </button>
+    </Button>
   );
 }
 

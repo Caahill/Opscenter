@@ -1,5 +1,5 @@
 'use client';
-import { Card, Label } from '@opshub/ui';
+import { Button, Card, Label } from '@opshub/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Tip } from '@/lib/guide';
@@ -41,9 +41,9 @@ export function GettingStarted({ name, tips }: { name: string; tips: Tip[] }) {
             {name}, here’s how to get the most out of Ops Hub
           </h2>
         </div>
-        <button type="button" onClick={hide} className="rounded-md px-2 py-1 text-[13px] text-muted hover:bg-surface-alt hover:text-body">
+        <Button type="button" variant="ghost" size="sm" onClick={hide} className="text-muted">
           Hide tips
-        </button>
+        </Button>
       </div>
       <ol className="mt-4 grid gap-2 sm:grid-cols-2">
         {tips.slice(0, 6).map((t, i) => (

@@ -1,5 +1,5 @@
 import { MARKETS, type ClientView, type MeView } from '@opshub/shared';
-import { Card, Chip, EmptyState, PageHeader } from '@opshub/ui';
+import { Button, Card, Chip, EmptyState, Input, NativeSelect, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { NewClientForm } from './new-client-form';
@@ -18,19 +18,18 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       <PageHeader title="Clients" description="One record per client, with every service as a linked project." />
       {canCreate ? <NewClientForm /> : null}
       <form className="mb-4 flex flex-wrap gap-2" action="/clients">
-        <input
+        <Input
           name="search"
           defaultValue={q.search ?? ''}
           placeholder="Search by name or website"
-          className="min-h-10 min-w-64 flex-1 rounded-lg border border-border bg-canvas px-3"
-        />
-        <select name="market" defaultValue={q.market ?? ''} className="min-h-10 rounded-lg border border-border bg-canvas px-2" aria-label="Market">
+          className="min-h-10 min-w-64 flex-1 rounded-lg border border-border bg-canvas px-3" />
+        <NativeSelect name="market" defaultValue={q.market ?? ''} wrapperClassName="w-auto" aria-label="Market">
           <option value="">Any market</option>
           {MARKETS.map((m) => (
             <option key={m}>{m}</option>
           ))}
-        </select>
-        <button className="min-h-10 rounded-lg border border-border bg-canvas px-4 hover:border-border-strong">Search</button>
+        </NativeSelect>
+        <Button variant="outline">Search</Button>
       </form>
       <Card className="p-0">
         <ul className="divide-y divide-surface-alt">

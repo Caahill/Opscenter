@@ -13,7 +13,7 @@ import {
   type Priority,
   type TaskView,
 } from '@opshub/shared';
-import { Button, Chip, inputClass } from '@opshub/ui';
+import { Button, Chip, NativeSelect } from '@opshub/ui';
 import Link from 'next/link';
 import { useState } from 'react';
 import { PriorityChip, StatusChip } from '@/lib/chips';
@@ -82,9 +82,9 @@ function TaskCard({
         {t.statusType === 'WAITING_ON_CLIENT' || t.statusType === 'ON_HOLD' ? <StatusChip status={t.statusType} /> : null}
         {duringLeave ? <span className="font-mono text-[11px] font-semibold text-error">During leave</span> : null}
         {canManage ? (
-          <button type="button" className="ml-auto font-mono text-[11px] text-link" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          <Button variant="link" size="inline" className="ml-auto font-mono" type="button"  aria-expanded={open} onClick={() => setOpen((v) => !v)}>
             Move
-          </button>
+          </Button>
         ) : null}
       </div>
       {open ? (
@@ -102,29 +102,29 @@ function TaskCard({
             setOpen(false);
           }}
         >
-          <select aria-label="Person" className={`${inputClass} py-1 text-[13px]`} value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+          <NativeSelect aria-label="Person" className="py-1 text-[13px]" value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
             <option value={UNASSIGNED}>Unassigned</option>
             {planner.members.map((m) => (
               <option key={m.userId} value={m.userId}>
                 {m.name} ({hours(Math.max(0, m.availableH - m.assignedH))} free)
               </option>
             ))}
-          </select>
-          <select aria-label="Day" className={`${inputClass} py-1 text-[13px]`} value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })}>
+          </NativeSelect>
+          <NativeSelect aria-label="Day" className="py-1 text-[13px]" value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })}>
             <option value="">No day</option>
             {planner.days.map((d) => (
               <option key={d} value={d}>
                 {formatDay(d)}
               </option>
             ))}
-          </select>
-          <select aria-label="Priority" className={`${inputClass} py-1 text-[13px]`} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as Priority })}>
+          </NativeSelect>
+          <NativeSelect aria-label="Priority" className="py-1 text-[13px]" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as Priority })}>
             {PRIORITIES.map((p) => (
               <option key={p} value={p}>
                 {PRIORITY_LABELS[p]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button type="submit" variant="tertiary" disabled={busy}>
             Save
           </Button>

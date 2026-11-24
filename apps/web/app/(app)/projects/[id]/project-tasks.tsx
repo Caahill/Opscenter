@@ -1,6 +1,6 @@
 'use client';
 import { PRIORITY_LABELS, PRIORITIES, type ProjectDetailView, type UserView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label, NativeSelect } from '@opshub/ui';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { CapacityWarning } from '@/lib/capacity-warning';
@@ -43,9 +43,9 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
           ) : null}
         </span>
         {doneCount > 0 ? (
-          <button type="button" className="text-[13px] text-link" onClick={() => setShowDone((v) => !v)}>
+          <Button variant="link" size="inline" type="button"  onClick={() => setShowDone((v) => !v)}>
             {showDone ? 'Hide' : 'Show'} {doneCount} done
-          </button>
+          </Button>
         ) : null}
       </div>
       <ul className="mt-3 divide-y divide-surface-alt">
@@ -82,28 +82,28 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
 
       {canCreate ? (
         <form onSubmit={add} className="mt-4 grid gap-2 border-t border-surface-alt pt-4 md:grid-cols-[1fr_180px]">
-          <input className={inputClass} placeholder="New task" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <select className={inputClass} value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} aria-label="Assignee">
+          <Input placeholder="New task" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <NativeSelect value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} aria-label="Assignee">
             <option value="">Unassigned</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <div className="md:col-span-2">
             <CapacityWarning assigneeId={form.assigneeId || null} day={form.dueDate || null} />
           </div>
           <div className="grid grid-cols-3 gap-2 md:col-span-2">
-            <input className={inputClass} type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} aria-label="Due date" />
-            <select className={inputClass} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} aria-label="Priority">
+            <Input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} aria-label="Due date" />
+            <NativeSelect value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} aria-label="Priority">
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
                   {PRIORITY_LABELS[p]}
                 </option>
               ))}
-            </select>
-            <input className={inputClass} inputMode="decimal" placeholder="Estimate h" value={form.estimateH} onChange={(e) => setForm({ ...form, estimateH: e.target.value })} />
+            </NativeSelect>
+            <Input inputMode="decimal" placeholder="Estimate h" value={form.estimateH} onChange={(e) => setForm({ ...form, estimateH: e.target.value })} />
           </div>
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={busy}>

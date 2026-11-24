@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PriorityChip } from '@/lib/chips';
 import { send, useAction } from '@/lib/client';
 import { formatDate } from '@/lib/format';
+import { Button, NativeSelect } from '@opshub/ui';
 
 const STEPS = [0, 25, 50, 75, 100];
 
@@ -36,43 +37,42 @@ export function TaskRow({ task, timezone }: { task: TaskView; timezone: string }
           <label className="sr-only" htmlFor={`status-${task.id}`}>
             Status
           </label>
-          <select
+          <NativeSelect
             id={`status-${task.id}`}
             aria-label="Status"
             className="min-h-9 rounded-md border border-border bg-canvas px-2 text-[14px]"
             value={task.statusType}
             disabled={busy}
-            onChange={(e) => update({ statusType: e.target.value as StatusType })}
-          >
+            onChange={(e) => update({ statusType: e.target.value as StatusType })}>
             {STATUS_TYPES.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <div className="flex overflow-hidden rounded-md border border-border" role="group" aria-label="Progress">
             {STEPS.map((p) => (
-              <button
+              <Button
                 key={p}
                 type="button"
+                variant={task.progressPct === p ? 'default' : 'ghost'}
+                size="sm"
                 disabled={busy}
                 aria-pressed={task.progressPct === p}
                 onClick={() => update({ progressPct: p })}
-                className={`min-h-9 px-2 font-mono text-[12px] ${task.progressPct === p ? 'bg-primary text-on-primary' : 'bg-canvas text-muted hover:text-body'}`}
+                className="rounded-none border-r border-border px-2.5 tabular-nums shadow-none last:border-r-0"
               >
                 {p}%
-              </button>
+              </Button>
             ))}
           </div>
           {task.statusType !== 'DONE' ? (
-            <button
+            <Button variant="outline" className="hover:border-success hover:text-success"
               type="button"
               disabled={busy}
-              onClick={() => update({ statusType: 'DONE' })}
-              className="min-h-9 rounded-md border border-border px-3 text-[14px] hover:border-success hover:text-success"
-            >
+              onClick={() => update({ statusType: 'DONE' })}>
               Done
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

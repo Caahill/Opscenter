@@ -1,6 +1,6 @@
 'use client';
 import { BILLING_STATUS_LABELS, type TaskDetailView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label } from '@opshub/ui';
 import Link from 'next/link';
 import { useState } from 'react';
 import { send, useAction } from '@/lib/client';
@@ -21,7 +21,7 @@ export function BillableControls({ task, canDecide }: { task: TaskDetailView; ca
           <p className="mt-2 text-[14px] text-muted">Is this outside the client&apos;s package? Flag it so the PM can bill it.</p>
           {!closed ? (
             <div className="mt-2 grid gap-2">
-              <input className={inputClass} aria-label="Why it is extra" placeholder="Why it is extra (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+              <Input aria-label="Why it is extra" placeholder="Why it is extra (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
               <Button type="button" variant="tertiary" disabled={busy} onClick={() => void run(() => send('POST', `/tasks/${task.id}/flag-billable`, { note: note || undefined }))}>
                 Flag as extra work
               </Button>

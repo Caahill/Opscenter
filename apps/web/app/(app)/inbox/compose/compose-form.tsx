@@ -1,6 +1,6 @@
 'use client';
 import { EMAIL_TEMPLATES, type ClientView, type ContactView, type MailboxView, type MeView, type ProjectView, type SendResultView } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Checkbox, Input, Label, NativeSelect, Textarea } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { getJson, sendForm, useAction } from '@/lib/client';
@@ -70,26 +70,26 @@ export function ComposeForm({ clients, mailboxes, templates, initialClientId, me
     <Card>
       <form onSubmit={submit} className="grid gap-3" aria-label="New message">
         <div className="grid gap-2 md:grid-cols-3">
-          <select className={inputClass} aria-label="Client" required value={clientId} onChange={(e) => setClientId(e.target.value)}>
+          <NativeSelect aria-label="Client" required value={clientId} onChange={(e) => setClientId(e.target.value)}>
             <option value="">Choose a client</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.companyName}
               </option>
             ))}
-          </select>
-          <select className={inputClass} aria-label="Channel" value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value as 'EMAIL' | 'WHATSAPP', to: [], cc: [] })}>
+          </NativeSelect>
+          <NativeSelect aria-label="Channel" value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value as 'EMAIL' | 'WHATSAPP', to: [], cc: [] })}>
             <option value="EMAIL">Email</option>
             <option value="WHATSAPP">WhatsApp</option>
-          </select>
+          </NativeSelect>
           {form.channel === 'EMAIL' ? (
-            <select className={inputClass} aria-label="Send from" value={form.mailboxId} onChange={(e) => setForm({ ...form, mailboxId: e.target.value })}>
+            <NativeSelect aria-label="Send from" value={form.mailboxId} onChange={(e) => setForm({ ...form, mailboxId: e.target.value })}>
               {mailboxes.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label || m.address}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           ) : null}
         </div>
 
@@ -98,7 +98,7 @@ export function ComposeForm({ clients, mailboxes, templates, initialClientId, me
           <div className="mt-1 flex flex-wrap gap-3">
             {reachable.map((c) => (
               <label key={c.id} className="flex items-center gap-1 text-[14px]">
-                <input type={form.channel === 'EMAIL' ? 'checkbox' : 'radio'} name="to" checked={form.to.includes(c.id)} onChange={(e) => setForm({ ...form, to: form.channel === 'EMAIL' ? toggle(form.to, c.id, e.target.checked) : [c.id] })} />
+                <Input type={form.channel === 'EMAIL' ? 'checkbox' : 'radio'} name="to" checked={form.to.includes(c.id)} onChange={(e) => setForm({ ...form, to: form.channel === 'EMAIL' ? toggle(form.to, c.id, e.target.checked) : [c.id] })} />
                 {c.label}
               </label>
             ))}
@@ -113,7 +113,7 @@ export function ComposeForm({ clients, mailboxes, templates, initialClientId, me
                 .filter((c) => !form.to.includes(c.id))
                 .map((c) => (
                   <label key={c.id} className="flex items-center gap-1 text-[14px]">
-                    <input type="checkbox" checked={form.cc.includes(c.id)} onChange={(e) => setForm({ ...form, cc: toggle(form.cc, c.id, e.target.checked) })} />
+                    <Checkbox checked={form.cc.includes(c.id)} onCheckedChange={(v) => setForm({ ...form, cc: toggle(form.cc, c.id, v === true) })} />
                     {c.label}
                   </label>
                 ))}
@@ -122,36 +122,36 @@ export function ComposeForm({ clients, mailboxes, templates, initialClientId, me
         ) : null}
 
         <div className="grid gap-2 md:grid-cols-2">
-          <select className={inputClass} aria-label="Project" value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value })}>
+          <NativeSelect aria-label="Project" value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value })}>
             <option value="">No project</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.packageName ?? p.department}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {form.channel === 'EMAIL' ? (
-            <select className={inputClass} aria-label="Template" value="" onChange={(e) => applyTemplate(e.target.value)}>
+            <NativeSelect aria-label="Template" value="" onChange={(e) => applyTemplate(e.target.value)}>
               <option value="">Start from a template</option>
               {EMAIL_TEMPLATES.map((t) => (
                 <option key={t.key} value={t.key}>
                   {t.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           ) : (
-            <select className={inputClass} aria-label="WhatsApp template" value={form.template} onChange={(e) => setForm({ ...form, template: e.target.value })}>
+            <NativeSelect aria-label="WhatsApp template" value={form.template} onChange={(e) => setForm({ ...form, template: e.target.value })}>
               <option value="">Free text (within 24 hours of the client writing)</option>
               {templates.map((t) => (
                 <option key={`${t.name}:${t.language}`} value={`${t.name}:${t.language}`}>
                   Template: {t.name} ({t.language})
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           )}
         </div>
-        {form.channel === 'EMAIL' ? <input className={inputClass} aria-label="Subject" placeholder="Subject" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /> : null}
-        <textarea className={`${inputClass} min-h-48`} aria-label="Message" placeholder="Message" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+        {form.channel === 'EMAIL' ? <Input aria-label="Subject" placeholder="Subject" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /> : null}
+        <Textarea className="min-h-48" aria-label="Message" placeholder="Message" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
         <div className="flex flex-wrap items-center gap-3">
           {form.channel === 'EMAIL' ? <input type="file" multiple aria-label="Attach files" className="text-[13px]" onChange={(e) => setFiles([...(e.target.files ?? [])])} /> : null}
           <Button type="submit" disabled={busy || !clientId || !form.to.length || (!form.body.trim() && !form.template)} className="ml-auto">

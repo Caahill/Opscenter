@@ -1,6 +1,7 @@
 'use client';
 import type { BoardView, ProjectView } from '@opshub/shared';
 import Link from 'next/link';
+import { useConfirm } from '@opshub/ui';
 import { useState } from 'react';
 import { HealthChip, StatusChip } from '@/lib/chips';
 import { send, SendError, useAction } from '@/lib/client';
@@ -37,6 +38,7 @@ export function BoardColumns({ board, canMove }: { board: BoardView; canMove: bo
   const { run, error, setError } = useAction();
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const [confirm, confirmDialog] = useConfirm();
 
   async function move(projectId: string, stageId: string, stageName: string) {
     await run(async () => {
@@ -44,7 +46,7 @@ export function BoardColumns({ board, canMove }: { board: BoardView; canMove: bo
         return await send('POST', `/projects/${projectId}/move-stage`, { stageId });
       } catch (e) {
         if (e instanceof SendError && e.code === 'CHECKLIST_INCOMPLETE') {
-          if (window.confirm(`${e.message}\n\nMove to "${stageName}" anyway? The override is logged.`)) {
+          if (await confirm({ title: `Move to "${stageName}" anyway?`, description: `${e.message}\n\nThe override is logged.`, confirmLabel: 'Move anyway' })) {
             return send('POST', `/projects/${projectId}/move-stage`, { stageId, override: true });
           }
           setError(null);
@@ -57,6 +59,7 @@ export function BoardColumns({ board, canMove }: { board: BoardView; canMove: bo
 
   return (
     <>
+      {confirmDialog}
       {error ? <p className="mb-3 text-[14px] text-error">{error}</p> : null}
       <div className="flex gap-3 overflow-x-auto pb-4">
         {board.columns.map((c) => (

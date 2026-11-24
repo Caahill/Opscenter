@@ -1,6 +1,6 @@
 'use client';
 import { CURRENCIES, type RenewalView } from '@opshub/shared';
-import { Button, inputClass } from '@opshub/ui';
+import { Button, buttonVariants, ConfirmButton, Input, NativeSelect } from '@opshub/ui';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
 
@@ -27,30 +27,30 @@ export function RenewalActions({ renewal }: { renewal: RenewalView }) {
         <Button type="button" variant="tertiary" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           Renew
         </Button>
-        <Button
-          type="button"
-          variant="danger"
+        <ConfirmButton
+          className={buttonVariants({ variant: 'danger', size: 'sm' })}
           disabled={busy}
-          onClick={() => {
-            if (window.confirm(`Close ${renewal.clientName}? The project ends and Accounts is told it will not renew.`)) void run(() => send('POST', `/projects/${renewal.projectId}/renewal`, { decision: 'CLOSE' }));
-          }}
-        >
-          Close
-        </Button>
+          trigger="Close"
+          title={`Close ${renewal.clientName}?`}
+          description="The project ends and Accounts is told it will not renew."
+          confirmLabel="Close project"
+          destructive
+          onConfirm={() => run(() => send('POST', `/projects/${renewal.projectId}/renewal`, { decision: 'CLOSE' }))}
+        />
       </div>
       {open ? (
         <form onSubmit={renew} className="grid w-72 gap-2" aria-label={`Renew ${renewal.clientName}`}>
           <label className="text-[13px] text-muted">
             New end date
-            <input className={inputClass} type="date" required value={form.newEndDate} onChange={(e) => setForm({ ...form, newEndDate: e.target.value })} />
+            <Input type="date" required value={form.newEndDate} onChange={(e) => setForm({ ...form, newEndDate: e.target.value })} />
           </label>
           <div className="grid grid-cols-[1fr_90px] gap-2">
-            <input className={inputClass} aria-label="Renewal amount" inputMode="decimal" placeholder="Amount" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-            <select className={inputClass} aria-label="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+            <Input aria-label="Renewal amount" inputMode="decimal" placeholder="Amount" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            <NativeSelect aria-label="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
               {CURRENCIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <Button type="submit" disabled={busy}>
             Renew and bill

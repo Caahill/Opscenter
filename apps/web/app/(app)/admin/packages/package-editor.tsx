@@ -1,6 +1,6 @@
 'use client';
 import { DEPARTMENT_LABELS, DEPARTMENTS, TASK_TYPE_LABELS, TASK_TYPES, type Department, type PackageView, type TaskTemplate, type TaskType } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label, NativeSelect } from '@opshub/ui';
 import { useState } from 'react';
 import { send, useAction } from '@/lib/client';
 import { plural } from '@/lib/format';
@@ -35,27 +35,27 @@ function TemplateRows({ label, rows, onChange, stages }: { label: string; rows: 
       <div className="mt-2 space-y-2">
         {rows.map((r, i) => (
           <div key={i} className={`grid gap-2 ${stages ? 'md:grid-cols-[1fr_150px_90px_90px_180px_auto]' : 'md:grid-cols-[1fr_150px_90px_90px_auto]'}`}>
-            <input className={inputClass} value={r.title} onChange={(e) => set(i, { title: e.target.value })} aria-label="Task title" />
-            <select className={inputClass} value={r.type} onChange={(e) => set(i, { type: e.target.value as TaskType })} aria-label="Task type">
+            <Input value={r.title} onChange={(e) => set(i, { title: e.target.value })} aria-label="Task title" />
+            <NativeSelect value={r.type} onChange={(e) => set(i, { type: e.target.value as TaskType })} aria-label="Task type">
               {TASK_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {TASK_TYPE_LABELS[t]}
                 </option>
               ))}
-            </select>
-            <input className={inputClass} inputMode="decimal" placeholder="Hours" value={r.estimateH} onChange={(e) => set(i, { estimateH: e.target.value })} aria-label="Estimate hours" />
-            <input className={inputClass} inputMode="numeric" placeholder="Due +d" value={r.dueInDays} onChange={(e) => set(i, { dueInDays: e.target.value })} aria-label="Due in days" />
+            </NativeSelect>
+            <Input inputMode="decimal" placeholder="Hours" value={r.estimateH} onChange={(e) => set(i, { estimateH: e.target.value })} aria-label="Estimate hours" />
+            <Input inputMode="numeric" placeholder="Due +d" value={r.dueInDays} onChange={(e) => set(i, { dueInDays: e.target.value })} aria-label="Due in days" />
             {stages ? (
-              <select className={inputClass} value={r.stage} onChange={(e) => set(i, { stage: e.target.value })} aria-label="Stage">
+              <NativeSelect value={r.stage} onChange={(e) => set(i, { stage: e.target.value })} aria-label="Stage">
                 <option value="">No stage</option>
                 {stages.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
-              </select>
+              </NativeSelect>
             ) : null}
-            <button type="button" className="text-[13px] text-error" onClick={() => onChange(rows.filter((_, j) => j !== i))}>
+            <Button variant="link" size="inline" className="text-error text-xs" type="button"  onClick={() => onChange(rows.filter((_, j) => j !== i))}>
               Remove
-            </button>
+            </Button>
           </div>
         ))}
         <Button variant="tertiary" onClick={() => onChange([...rows, { title: '', type: 'DELIVERABLE', estimateH: '', dueInDays: '', stage: '' }])}>
@@ -108,8 +108,8 @@ export function PackageEditor({ pkg, department, stages }: { pkg: PackageView; d
       {editing ? (
         <div>
           <div className="mt-3 grid gap-2 md:grid-cols-[1fr_160px]">
-            <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} aria-label="Package name" />
-            <input className={inputClass} inputMode="decimal" placeholder="Hours a month" value={hours} onChange={(e) => setHours(e.target.value)} aria-label="Monthly hours" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} aria-label="Package name" />
+            <Input inputMode="decimal" placeholder="Hours a month" value={hours} onChange={(e) => setHours(e.target.value)} aria-label="Monthly hours" />
           </div>
           <TemplateRows label="Setup tasks (once, when the project starts)" rows={setup} onChange={setSetup} stages={stages} />
           <TemplateRows label="Monthly tasks (each cycle day)" rows={cycle} onChange={setCycle} />
@@ -147,14 +147,14 @@ export function NewPackage() {
     <Card className="mb-4">
       <Label>New package</Label>
       <div className="mt-3 grid gap-2 md:grid-cols-[200px_1fr_auto]">
-        <select className={inputClass} value={department} onChange={(e) => setDepartment(e.target.value as Department)} aria-label="Department">
+        <NativeSelect value={department} onChange={(e) => setDepartment(e.target.value as Department)} aria-label="Department">
           {DEPARTMENTS.map((d) => (
             <option key={d} value={d}>
               {DEPARTMENT_LABELS[d]}
             </option>
           ))}
-        </select>
-        <input className={inputClass} placeholder="Package name" value={name} onChange={(e) => setName(e.target.value)} />
+        </NativeSelect>
+        <Input placeholder="Package name" value={name} onChange={(e) => setName(e.target.value)} />
         <Button
           disabled={busy || !name}
           onClick={() =>

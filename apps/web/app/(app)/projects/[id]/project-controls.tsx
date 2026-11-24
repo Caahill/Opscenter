@@ -10,13 +10,14 @@ import {
   type ProjectDetailView,
   type TeamView,
 } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, buttonVariants, Card, Checkbox, Collapsible, CollapsibleContent, CollapsibleTrigger, ConfirmButton, Input, Label, NativeSelect, useConfirm } from '@opshub/ui';
 import { useState } from 'react';
 import { send, SendError, useAction } from '@/lib/client';
 
 /** Stage stepper: click a stage to move there. An incomplete checklist asks before overriding. */
 export function StageStepper({ project, canManage }: { project: ProjectDetailView; canManage: boolean }) {
   const { run, error, setError } = useAction();
+  const [confirm, confirmDialog] = useConfirm();
   const stages = project.stages ?? [];
 
   async function move(stageId: string, name: string) {
@@ -25,7 +26,7 @@ export function StageStepper({ project, canManage }: { project: ProjectDetailVie
         return await send('POST', `/projects/${project.id}/move-stage`, { stageId });
       } catch (e) {
         if (e instanceof SendError && e.code === 'CHECKLIST_INCOMPLETE') {
-          if (window.confirm(`${e.message}\n\nMove to "${name}" anyway? The override is logged.`)) {
+          if (await confirm({ title: `Move to "${name}" anyway?`, description: `${e.message}\n\nThe override is logged.`, confirmLabel: 'Move anyway' })) {
             return send('POST', `/projects/${project.id}/move-stage`, { stageId, override: true });
           }
           setError(null);
@@ -49,20 +50,23 @@ export function StageStepper({ project, canManage }: { project: ProjectDetailVie
               : 'bg-canvas text-muted border border-border';
           return (
             <li key={s.id} className="shrink-0">
-              <button
+              <Button
                 type="button"
+                variant={current ? 'default' : 'outline'}
+                size="sm"
                 disabled={!canManage || current}
                 onClick={() => move(s.id, s.name)}
                 aria-current={current ? 'step' : undefined}
-                className={`min-h-10 rounded-full px-3 text-[13px] ${cls} ${canManage && !current ? 'hover:border-accent' : ''}`}
+                className={`rounded-full disabled:opacity-100 ${current ? '' : cls}`}
                 title={s.phase === 'CYCLE' ? 'Monthly cycle stage' : undefined}
               >
                 {s.name}
-              </button>
+              </Button>
             </li>
           );
         })}
       </ol>
+      {confirmDialog}
       {error ? <p className="mt-2 text-[14px] text-error">{error}</p> : null}
     </div>
   );
@@ -76,11 +80,10 @@ export function StageChecklist({ projectId, items, canEdit }: { projectId: strin
       {items.map((i) => (
         <li key={i.id}>
           <label className="flex min-h-9 items-center gap-2 text-[14px]">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={Boolean(i.done)}
               disabled={!canEdit}
-              onChange={(e) => run(() => send('PATCH', `/projects/${projectId}/checklist/${i.id}`, { done: e.target.checked }))}
+              onCheckedChange={(v) => run(() => send('PATCH', `/projects/${projectId}/checklist/${i.id}`, { done: v === true }))}
             />
             {i.text}
           </label>
@@ -116,7 +119,7 @@ export function StatusControls({ project, packages, teams }: { project: ProjectD
       </div>
       {project.statusType !== 'ON_HOLD' ? (
         <div className="mt-3 flex gap-2">
-          <input className={inputClass} placeholder="Hold reason" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} />
+          <Input placeholder="Hold reason" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} />
           <Button variant="tertiary" disabled={busy || !holdReason} onClick={() => patch({ statusType: 'ON_HOLD', holdReason })}>
             Hold
           </Button>
@@ -124,68 +127,67 @@ export function StatusControls({ project, packages, teams }: { project: ProjectD
       ) : null}
 
       <label className="mt-3 flex items-center gap-2 text-[14px]">
-        <input type="checkbox" checked={Boolean(project.memberSendEnabled)} disabled={busy} onChange={(e) => patch({ memberSendEnabled: e.target.checked })} />
+        <Checkbox checked={Boolean(project.memberSendEnabled)} disabled={busy} onCheckedChange={(v) => patch({ memberSendEnabled: v === true })} />
         Team Members may email this client from a shared mailbox
       </label>
 
       <label className="mt-3 block text-[13px] text-muted">
         Health
-        <select className={inputClass} value={project.health} onChange={(e) => patch({ health: e.target.value })}>
+        <NativeSelect value={project.health} onChange={(e) => patch({ health: e.target.value })}>
           {Object.entries(HEALTH_LABELS).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="mt-3 block text-[13px] text-muted">
         Team
-        <select className={inputClass} value={project.teamId ?? ''} onChange={(e) => patch({ teamId: e.target.value || null })}>
+        <NativeSelect value={project.teamId ?? ''} onChange={(e) => patch({ teamId: e.target.value || null })}>
           <option value="">No team</option>
           {deptTeams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="mt-3 block text-[13px] text-muted">
         Package (applies to future monthly cycles)
-        <select className={inputClass} value={project.packageId ?? ''} onChange={(e) => patch({ packageId: e.target.value || null })}>
+        <NativeSelect value={project.packageId ?? ''} onChange={(e) => patch({ packageId: e.target.value || null })}>
           <option value="">No package</option>
           {deptPackages.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
 
-      <details className="mt-4">
-        <summary className="cursor-pointer text-[14px] text-error">Stop this project</summary>
-        <div className="mt-2 grid gap-2">
-          <select className={inputClass} value={stopReason} onChange={(e) => setStopReason(e.target.value)} aria-label="Stop reason">
+      <Collapsible className="mt-4">
+        <CollapsibleTrigger className="text-[14px] text-error hover:underline">Stop this project</CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 grid gap-2">
+          <NativeSelect value={stopReason} onChange={(e) => setStopReason(e.target.value)} aria-label="Stop reason">
             <option value="">Reason (required)</option>
             {STOP_REASONS.map((r) => (
               <option key={r} value={r}>
                 {STOP_REASON_LABELS[r]}
               </option>
             ))}
-          </select>
-          <input className={inputClass} placeholder="Note (optional)" value={stopNote} onChange={(e) => setStopNote(e.target.value)} />
-          <Button
-            variant="danger"
+          </NativeSelect>
+          <Input placeholder="Note (optional)" value={stopNote} onChange={(e) => setStopNote(e.target.value)} />
+          <ConfirmButton
+            className={buttonVariants({ variant: 'danger', size: 'sm' })}
             disabled={busy || !stopReason}
-            onClick={() => {
-              if (window.confirm('Stopped is final for this project. Continue?')) {
-                void run(() => send('POST', `/projects/${project.id}/stop`, { reason: stopReason, note: stopNote || null }));
-              }
-            }}
-          >
-            Stop project
-          </Button>
-        </div>
-      </details>
+            trigger="Stop project"
+            title="Stop this project?"
+            description="Stopped is final for this project. Its open tasks close and it leaves the board."
+            confirmLabel="Stop project"
+            destructive
+            onConfirm={() => run(() => send('POST', `/projects/${project.id}/stop`, { reason: stopReason, note: stopNote || null }))}
+          />
+        </CollapsibleContent>
+      </Collapsible>
       {error ? <p className="mt-2 text-[14px] text-error">{error}</p> : null}
     </Card>
   );
@@ -204,13 +206,12 @@ export function HandoffForm({ projectId, targets, packages }: { projectId: strin
         {targets.map((d) => (
           <li key={d} className="text-[14px]">
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={d in chosen}
-                onChange={(e) =>
+                onCheckedChange={(v) =>
                   setChosen((c) => {
                     const next = { ...c };
-                    if (e.target.checked) next[d] = '';
+                    if (v === true) next[d] = '';
                     else delete next[d];
                     return next;
                   })
@@ -219,7 +220,7 @@ export function HandoffForm({ projectId, targets, packages }: { projectId: strin
               {DEPARTMENT_LABELS[d as Department]}
             </label>
             {d in chosen ? (
-              <select className={`${inputClass} mt-1`} value={chosen[d]} onChange={(e) => setChosen({ ...chosen, [d]: e.target.value })} aria-label={`${d} package`}>
+              <NativeSelect className="mt-1" value={chosen[d]} onChange={(e) => setChosen({ ...chosen, [d]: e.target.value })} aria-label={`${d} package`}>
                 <option value="">No package</option>
                 {packages
                   .filter((p) => p.department === d)
@@ -228,7 +229,7 @@ export function HandoffForm({ projectId, targets, packages }: { projectId: strin
                       {p.name}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             ) : null}
           </li>
         ))}

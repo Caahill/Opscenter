@@ -1,6 +1,6 @@
 'use client';
 import { CONTACT_ROLE_LABELS, CONTACT_ROLES, DEPARTMENT_LABELS, DEPARTMENTS, type Department, type PackageView, type ProjectDetailView, type TeamView } from '@opshub/shared';
-import { Button, inputClass, Label } from '@opshub/ui';
+import { Button, Input, Label, NativeSelect } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
@@ -35,16 +35,16 @@ export function AddContactForm({ clientId }: { clientId: string }) {
   }
   return (
     <form onSubmit={submit} className="mt-4 grid gap-2">
-      <select className={inputClass} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} aria-label="Contact role">
+      <NativeSelect value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} aria-label="Contact role">
         {CONTACT_ROLES.map((r) => (
           <option key={r} value={r}>
             {CONTACT_ROLE_LABELS[r]}
           </option>
         ))}
-      </select>
-      <input className={inputClass} placeholder="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-      <input className={inputClass} placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-      <input className={inputClass} placeholder="Phone with country code" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+      </NativeSelect>
+      <Input placeholder="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      <Input placeholder="Phone with country code" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       <p className="text-[12px] text-muted">Stored encrypted. Only you and the Admin see these details; everyone else sees the role label.</p>
       <div className="flex gap-2">
         <Button type="submit" disabled={busy}>
@@ -99,49 +99,47 @@ export function StartProjectForm({ clientId, packages, teams }: { clientId: stri
   return (
     <form onSubmit={submit} className="mt-4 grid gap-3 rounded-lg border border-border p-3 md:grid-cols-2">
       <Label className="md:col-span-2">Start a project</Label>
-      <select
-        className={inputClass}
+      <NativeSelect
         value={department}
         onChange={(e) => {
           setDepartment(e.target.value as Department);
           setPackageId('');
           setTeamId('');
         }}
-        aria-label="Department"
-      >
+        aria-label="Department">
         {DEPARTMENTS.map((d) => (
           <option key={d} value={d}>
             {DEPARTMENT_LABELS[d]}
           </option>
         ))}
-      </select>
-      <select className={inputClass} value={packageId} onChange={(e) => setPackageId(e.target.value)} aria-label="Package">
+      </NativeSelect>
+      <NativeSelect value={packageId} onChange={(e) => setPackageId(e.target.value)} aria-label="Package">
         <option value="">No package</option>
         {deptPackages.map((p) => (
           <option key={p.id} value={p.id}>
             {p.name}
           </option>
         ))}
-      </select>
-      <select className={inputClass} value={teamId} onChange={(e) => setTeamId(e.target.value)} aria-label="Team">
+      </NativeSelect>
+      <NativeSelect value={teamId} onChange={(e) => setTeamId(e.target.value)} aria-label="Team">
         <option value="">Default team</option>
         {deptTeams.map((t) => (
           <option key={t.id} value={t.id}>
             {t.name}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       <label className="text-[13px] text-muted">
         Start date
-        <input className={inputClass} type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <Input type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} />
       </label>
       <label className="text-[13px] text-muted">
         End or renewal date (retainers and AMC)
-        <input className={inputClass} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </label>
       <label className="text-[13px] text-muted">
         Project value (INR, PM and Admin only)
-        <input className={inputClass} inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
+        <Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
       </label>
       <div className="flex items-center gap-2 md:col-span-2">
         <Button type="submit" disabled={busy}>

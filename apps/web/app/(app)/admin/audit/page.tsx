@@ -1,5 +1,5 @@
 import type { AuditLogView, MeView, Page } from '@opshub/shared';
-import { Card, Chip, PageHeader } from '@opshub/ui';
+import { Card, Chip, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { formatDateTime, plural } from '@/lib/format';
@@ -78,37 +78,37 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         ))}
       </div>
       <Card className="overflow-x-auto p-0">
-        <table className="w-full min-w-[640px] text-left text-[14px]">
-          <thead className="border-b border-border font-mono text-[12px] uppercase text-muted">
-            <tr>
-              <th className="px-4 py-3 font-medium">When</th>
-              <th className="px-4 py-3 font-medium">Who</th>
-              <th className="px-4 py-3 font-medium">Action</th>
-              <th className="px-4 py-3 font-medium">Detail</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-alt">
+        <Table className="w-full min-w-[640px] text-left text-[14px]">
+          <TableHeader className="border-b border-border text-[12px] text-muted">
+            <TableRow>
+              <TableHead className="px-4 py-3 font-medium">When</TableHead>
+              <TableHead className="px-4 py-3 font-medium">Who</TableHead>
+              <TableHead className="px-4 py-3 font-medium">Action</TableHead>
+              <TableHead className="px-4 py-3 font-medium">Detail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {data.items.map((row) => (
-              <tr key={row.id}>
-                <td className="whitespace-nowrap px-4 py-3 text-muted">{formatDateTime(row.at, me.timezone)}</td>
-                <td className="px-4 py-3">{row.actorName ?? row.actorId}</td>
-                <td className="px-4 py-3">
+              <TableRow key={row.id}>
+                <TableCell className="whitespace-nowrap px-4 py-3 text-muted">{formatDateTime(row.at, me.timezone)}</TableCell>
+                <TableCell className="px-4 py-3">{row.actorName ?? row.actorId}</TableCell>
+                <TableCell className="px-4 py-3">
                   <Chip tone={TONE[row.action] ?? 'neutral'} title={row.action}>
                     {actionLabel(row.action)}
                   </Chip>
-                </td>
-                <td className="px-4 py-3 text-muted">{describe(row)}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="px-4 py-3 text-muted">{describe(row)}</TableCell>
+              </TableRow>
             ))}
             {data.items.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted">
+              <TableRow>
+                <TableCell colSpan={4} className="px-4 py-6 text-center text-muted">
                   {action ? `No “${actionLabel(action)}” entries yet.` : 'Nothing logged yet.'}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : null}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </Card>
       {data.nextCursor ? (
         <div className="mt-4">

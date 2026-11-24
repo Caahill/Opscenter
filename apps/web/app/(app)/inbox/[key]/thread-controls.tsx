@@ -24,7 +24,7 @@ import {
   type TriageResultView,
   type UserView,
 } from '@opshub/shared';
-import { Button, Chip, inputClass } from '@opshub/ui';
+import { Button, Checkbox, Chip, Input, NativeSelect, Textarea } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { CapacityWarning } from '@/lib/capacity-warning';
@@ -100,57 +100,57 @@ export function TriageCard({ message, projects, tasksByProject, users }: { messa
 
       {editing ? (
         <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <select className={inputClass} aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as TriageCategory })}>
+          <NativeSelect aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as TriageCategory })}>
             {TRIAGE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {TRIAGE_CATEGORY_LABELS[c]}
               </option>
             ))}
-          </select>
-          <select className={inputClass} aria-label="Action" value={form.action} onChange={(e) => setForm({ ...form, action: e.target.value as TriageAction })}>
+          </NativeSelect>
+          <NativeSelect aria-label="Action" value={form.action} onChange={(e) => setForm({ ...form, action: e.target.value as TriageAction })}>
             {TRIAGE_ACTIONS.map((a) => (
               <option key={a} value={a}>
                 {TRIAGE_ACTION_LABELS[a]}
               </option>
             ))}
-          </select>
-          <select className={inputClass} aria-label="Project" value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value, taskId: '' })}>
+          </NativeSelect>
+          <NativeSelect aria-label="Project" value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value, taskId: '' })}>
             <option value="">No project</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.department ? DEPARTMENT_LABELS[p.department] : ''} · {p.stageName}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {form.action === 'ATTACH_TO_TASK' ? (
-            <select className={inputClass} aria-label="Task" value={form.taskId} onChange={(e) => setForm({ ...form, taskId: e.target.value })}>
+            <NativeSelect aria-label="Task" value={form.taskId} onChange={(e) => setForm({ ...form, taskId: e.target.value })}>
               <option value="">Choose a task</option>
               {tasks.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.title}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           ) : null}
           {form.action === 'CREATE_TASK' ? (
             <>
-              <input className={`${inputClass} md:col-span-2`} aria-label="Task title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <select className={inputClass} aria-label="Priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as Priority })}>
+              <Input className="md:col-span-2" aria-label="Task title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <NativeSelect aria-label="Priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as Priority })}>
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}>
                     {PRIORITY_LABELS[p]}
                   </option>
                 ))}
-              </select>
-              <select className={inputClass} aria-label="Assignee" value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+              </NativeSelect>
+              <NativeSelect aria-label="Assignee" value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
                 <option value="">Unassigned</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
                 ))}
-              </select>
-              <input className={inputClass} type="date" aria-label="Due date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+              </NativeSelect>
+              <Input type="date" aria-label="Due date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
               <div className="md:col-span-2">
                 <CapacityWarning assigneeId={form.assigneeId || null} day={form.dueDate || null} />
               </div>
@@ -192,28 +192,28 @@ export function LinkForm({ messageId, clients }: { messageId: string; clients: C
   }
   return (
     <form onSubmit={submit} className="mt-3 grid gap-2" aria-label="Link to a client">
-      <select className={inputClass} aria-label="Client" required value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+      <NativeSelect aria-label="Client" required value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
         <option value="">Choose a client</option>
         {clients.map((c) => (
           <option key={c.id} value={c.id}>
             {c.companyName}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       <label className="flex items-center gap-2 text-[14px]">
-        <input type="checkbox" checked={form.save} onChange={(e) => setForm({ ...form, save: e.target.checked })} />
+        <Checkbox checked={form.save} onCheckedChange={(v) => setForm({ ...form, save: v === true })} />
         Save the sender as a contact (your own clients)
       </label>
       {form.save ? (
         <>
-          <select className={inputClass} aria-label="Contact role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as ContactRole })}>
+          <NativeSelect aria-label="Contact role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as ContactRole })}>
             {CONTACT_ROLES.map((r) => (
               <option key={r} value={r}>
                 {CONTACT_ROLE_LABELS[r]}
               </option>
             ))}
-          </select>
-          <input className={inputClass} aria-label="Contact name" required placeholder="Their name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </NativeSelect>
+          <Input aria-label="Contact name" required placeholder="Their name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </>
       ) : null}
       <Button type="submit" variant="secondary" disabled={busy}>
@@ -274,18 +274,18 @@ export function ReplyBox({ thread, replyTo, contacts, mailboxes, templates }: { 
     <form onSubmit={submit} className="rounded-xl border border-border bg-canvas p-4" aria-label="Reply">
       <div className="flex flex-wrap items-center gap-2">
         {(email ? (['REPLY', 'REPLY_ALL', 'FORWARD'] as Mode[]) : (['REPLY'] as Mode[])).map((m) => (
-          <button key={m} type="button" onClick={() => setMode(m)} aria-pressed={mode === m} className={`rounded-full px-3 py-1 text-[13px] ${mode === m ? 'bg-primary text-on-primary' : 'bg-surface-alt text-muted'}`}>
+          <Button key={m} type="button" variant={mode === m ? 'default' : 'secondary'} size="sm" onClick={() => setMode(m)} aria-pressed={mode === m} className="rounded-full">
             {m === 'REPLY' ? 'Reply' : m === 'REPLY_ALL' ? 'Reply all' : 'Forward'}
-          </button>
+          </Button>
         ))}
         {email && mailboxes.length > 1 ? (
-          <select className={`${inputClass} ml-auto w-auto py-1 text-[13px]`} aria-label="Send from" value={mailboxId} onChange={(e) => setMailboxId(e.target.value)}>
+          <NativeSelect className="py-1 text-[13px]" wrapperClassName="ml-auto w-auto" aria-label="Send from" value={mailboxId} onChange={(e) => setMailboxId(e.target.value)}>
             {mailboxes.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label || m.address}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         ) : null}
       </div>
       <p className="mt-2 text-[13px] text-muted">
@@ -296,23 +296,23 @@ export function ReplyBox({ thread, replyTo, contacts, mailboxes, templates }: { 
         <div className="mt-1 flex flex-wrap gap-2">
           {contacts.map((c) => (
             <label key={c.id} className="flex items-center gap-1 text-[13px]">
-              <input type="checkbox" checked={extra.includes(c.id)} onChange={(e) => setExtra(e.target.checked ? [...extra, c.id] : extra.filter((x) => x !== c.id))} />
+              <Checkbox checked={extra.includes(c.id)} onCheckedChange={(v) => setExtra(v === true ? [...extra, c.id] : extra.filter((x) => x !== c.id))} />
               {c.label}
             </label>
           ))}
         </div>
       ) : null}
       {!email && !windowOpen ? (
-        <select className={`${inputClass} mt-2`} aria-label="Template" value={template} onChange={(e) => setTemplate(e.target.value)}>
+        <NativeSelect className="mt-2" aria-label="Template" value={template} onChange={(e) => setTemplate(e.target.value)}>
           <option value="">Approved template (required outside 24 hours)</option>
           {templates.map((t) => (
             <option key={`${t.name}:${t.language}`} value={`${t.name}:${t.language}`}>
               {t.name} ({t.language})
             </option>
           ))}
-        </select>
+        </NativeSelect>
       ) : null}
-      <textarea className={`${inputClass} mt-2 min-h-28`} aria-label="Message" placeholder={email ? 'Write your reply' : 'WhatsApp message'} value={body} onChange={(e) => setBody(e.target.value)} />
+      <Textarea className="mt-2 min-h-28" aria-label="Message" placeholder={email ? 'Write your reply' : 'WhatsApp message'} value={body} onChange={(e) => setBody(e.target.value)} />
       <div className="mt-2 flex flex-wrap items-center gap-3">
         {email ? <input type="file" multiple aria-label="Attach files" className="text-[13px]" onChange={(e) => setFiles([...(e.target.files ?? [])])} /> : null}
         <Button type="submit" disabled={busy || (!body.trim() && !template)} className="ml-auto">

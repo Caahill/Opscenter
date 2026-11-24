@@ -1,6 +1,6 @@
 'use client';
 import { BILLING_REASON_LABELS, BILLING_STATUS_LABELS, CURRENCIES, type BillingRequestView, type TaskView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label, Masked } from '@opshub/ui';
+import { Button, Card, Checkbox, Chip, Input, Label, Masked, NativeSelect, Textarea } from '@opshub/ui';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
@@ -63,39 +63,38 @@ export function BillingCard({ projectId, requests, tasks, canRaise, preselect }:
 
       {open ? (
         <form onSubmit={submit} className="mt-4 grid gap-2 border-t border-surface-alt pt-4" aria-label="Raise billing request">
-          <select className={inputClass} aria-label="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}>
+          <NativeSelect aria-label="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}>
             <option value="ADDITIONAL_TASK">{BILLING_REASON_LABELS.ADDITIONAL_TASK}</option>
             <option value="NEW_PACKAGE">{BILLING_REASON_LABELS.NEW_PACKAGE}</option>
-          </select>
+          </NativeSelect>
           {form.reason === 'ADDITIONAL_TASK' ? (
             <fieldset className="grid gap-1">
               <legend className="text-[13px] text-muted">Work being billed</legend>
               {listed.map((t) => (
                 <label key={t.id} className="flex items-center gap-2 text-[14px]">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={form.taskIds.includes(t.id)}
-                    onChange={(e) => setForm({ ...form, taskIds: e.target.checked ? [...form.taskIds, t.id] : form.taskIds.filter((x) => x !== t.id) })}
+                    onCheckedChange={(v) => setForm({ ...form, taskIds: v === true ? [...form.taskIds, t.id] : form.taskIds.filter((x) => x !== t.id) })}
                   />
                   {t.title}
                   {t.billable && !t.billableConfirmed ? <span className="font-mono text-[11px] text-muted">(flagged)</span> : null}
                 </label>
               ))}
               {listed.length === 0 ? <span className="text-[13px] text-muted">No tasks flagged as extra work.</span> : null}
-              <button type="button" className="text-left text-[13px] text-link" onClick={() => setShowAll((v) => !v)}>
+              <Button variant="link" size="inline" className="text-left" type="button"  onClick={() => setShowAll((v) => !v)}>
                 {showAll ? 'Show flagged tasks only' : 'Show all tasks'}
-              </button>
+              </Button>
             </fieldset>
           ) : null}
-          <textarea className={`${inputClass} min-h-16`} aria-label="Description" placeholder="What is being billed" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <Textarea className="min-h-16" aria-label="Description" placeholder="What is being billed" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div className="grid grid-cols-[1fr_110px] gap-2">
-            <input className={inputClass} aria-label="Amount" inputMode="decimal" placeholder="Amount" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-            <select className={inputClass} aria-label="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+            <Input aria-label="Amount" inputMode="decimal" placeholder="Amount" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            <NativeSelect aria-label="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
               <option value="">Client&apos;s</option>
               {CURRENCIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <Button type="submit" disabled={busy || (form.reason === 'ADDITIONAL_TASK' && form.taskIds.length === 0)}>
             Send to Accounts

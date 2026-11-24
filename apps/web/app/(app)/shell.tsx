@@ -1,6 +1,6 @@
 'use client';
 import { ROLE_LABELS, type MeView, type NotificationView } from '@opshub/shared';
-import { Chip } from '@opshub/ui';
+import { Button, buttonVariants, Chip } from '@opshub/ui';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -155,15 +155,15 @@ export function Shell({ me, devAuth, unread, chatUnread, children }: { me: MeVie
 
       <div className="min-w-0">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-canvas/95 px-4 py-3 backdrop-blur lg:px-8">
-          <button
+          <Button
+            variant="outline"
             type="button"
-            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 text-[14px] lg:hidden"
+            className="lg:hidden"
             onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-          >
+            aria-expanded={open}>
             <Icon name="menu" />
             Menu
-          </button>
+          </Button>
           <div className="hidden lg:block" />
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             {devAuth ? (
@@ -189,21 +189,20 @@ export function Shell({ me, devAuth, unread, chatUnread, children }: { me: MeVie
             <Link
               href="/notifications"
               aria-label={unread ? `Alerts, ${unread} unread` : 'Alerts'}
-              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 text-[14px] hover:border-border-strong"
+              className={buttonVariants({ variant: 'outline' })}
             >
               <Icon name="bell" />
               <span className="hidden sm:inline">Alerts</span>
               {unread ? <span className="rounded-full bg-accent px-2 text-[12px] font-semibold text-on-primary">{unread}</span> : null}
             </Link>
-            <button
+            <Button
+              variant="outline"
               type="button"
               onClick={logout}
-              aria-label="Sign out"
-              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 text-[14px] hover:border-border-strong"
-            >
+              aria-label="Sign out">
               <Icon name="logout" />
               <span className="hidden sm:inline">Sign out</span>
-            </button>
+            </Button>
           </div>
         </header>
         {open ? <div className="border-b border-border bg-canvas px-3 py-4 lg:hidden">{nav}</div> : null}

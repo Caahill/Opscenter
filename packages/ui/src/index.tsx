@@ -3,40 +3,39 @@
 // so every page picks up the shadcn look without changing its own code.
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
+import { buttonVariants } from './button-variants';
+import type {
+  ButtonHTMLAttributes,
+  ComponentProps,
+  HTMLAttributes,
+  ReactNode,
+  TableHTMLAttributes,
+  TdHTMLAttributes,
+  ThHTMLAttributes,
+} from 'react';
 import { cn } from './utils';
 
+export { buttonVariants } from './button-variants';
 export { cn } from './utils';
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Checkbox,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  ConfirmButton,
+  useConfirm,
+} from './controls';
 export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 
 // ---- Button (shadcn button) --------------------------------------------------------------
-
-export const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-on-primary shadow-card hover:bg-primary/90',
-        secondary: 'bg-surface-alt text-body shadow-card hover:bg-surface-alt/80',
-        outline: 'border border-border bg-canvas text-body shadow-card hover:bg-surface-alt',
-        ghost: 'text-body hover:bg-surface-alt',
-        destructive: 'border border-border bg-canvas text-error shadow-card hover:border-error/40 hover:bg-[#fef2f2]',
-        link: 'text-link underline-offset-4 hover:underline',
-        // Ops Hub's original names, mapped onto shadcn variants.
-        primary: 'bg-primary text-on-primary shadow-card hover:bg-primary/90',
-        tertiary: 'border border-border bg-canvas text-body shadow-card hover:bg-surface-alt',
-        danger: 'border border-border bg-canvas text-error shadow-card hover:border-error/40 hover:bg-[#fef2f2]',
-      },
-      size: {
-        default: 'min-h-9 px-4 py-2',
-        sm: 'min-h-8 gap-1.5 px-3 text-[13px]',
-        lg: 'min-h-10 px-6',
-        icon: 'size-9',
-      },
-    },
-    defaultVariants: { variant: 'default', size: 'default' },
-  },
-);
 
 type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
 
@@ -145,9 +144,10 @@ export function Masked({ value, multiline = false }: { value: unknown; multiline
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-border/60 py-2 last:border-0">
+    <div className="grid grid-cols-[minmax(96px,140px)_minmax(0,1fr)] gap-3 border-b border-border/60 py-2 last:border-0">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className="text-sm text-body">{children}</dd>
+      {/* minmax(0,1fr) + anywhere-wrapping keep long emails and URLs inside the card. */}
+      <dd className="min-w-0 text-sm text-body [overflow-wrap:anywhere]">{children}</dd>
     </div>
   );
 }
@@ -158,12 +158,63 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export const inputClass =
   'w-full min-h-9 rounded-md border border-border bg-canvas px-3 py-1.5 text-sm text-body shadow-card outline-none transition-[color,box-shadow] placeholder:text-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50';
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: ComponentProps<'input'>) {
   return <input className={cn(inputClass, className)} {...props} />;
 }
 
-export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
   return <textarea className={cn(inputClass, 'min-h-20', className)} {...props} />;
+}
+
+/**
+ * shadcn NativeSelect: the browser's own dropdown (so phones show their native picker and forms
+ * and tests behave as before), styled like a shadcn select with a chevron.
+ */
+export function NativeSelect({ className, wrapperClassName, ...props }: ComponentProps<'select'> & { wrapperClassName?: string }) {
+  return (
+    <div className={cn('relative w-full min-w-0', wrapperClassName)}>
+      <select className={cn(inputClass, 'appearance-none pr-8', className)} {...props} />
+      <svg
+        aria-hidden
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </div>
+  );
+}
+
+// ---- Table (shadcn table) ----------------------------------------------------------------
+
+export function Table({ className, ...props }: TableHTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="relative w-full overflow-x-auto">
+      <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
+    </div>
+  );
+}
+export function TableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
+  return <thead className={cn('[&_tr]:border-b', className)} {...props} />;
+}
+export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
+  return <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
+}
+export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
+  return <tr className={cn('border-b border-border transition-colors hover:bg-surface/60', className)} {...props} />;
+}
+export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
+  return <th className={cn('h-10 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-muted', className)} {...props} />;
+}
+export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
+  return <td className={cn('p-3 align-middle', className)} {...props} />;
 }
 
 /** Visible form label (shadcn label). */

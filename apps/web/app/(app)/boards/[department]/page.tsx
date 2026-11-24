@@ -11,7 +11,7 @@ import {
   type TaskView,
   type UserView,
 } from '@opshub/shared';
-import { Chip, PageHeader } from '@opshub/ui';
+import { Button, Checkbox, Chip, NativeSelect, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -85,58 +85,58 @@ export default async function BoardPage({ params, searchParams }: { params: Prom
         ))}
         <form className="ml-auto flex flex-wrap gap-2 text-[14px]" action={`/boards/${dept}`}>
           <input type="hidden" name="view" value={view} />
-          <select name="pmId" defaultValue={search.pmId ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="PM">
+          <NativeSelect name="pmId" defaultValue={search.pmId ?? ''} wrapperClassName="w-auto" aria-label="PM">
             <option value="">Any PM</option>
             {pms.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
             ))}
-          </select>
-          <select name="assigneeId" defaultValue={search.assigneeId ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="Assignee">
+          </NativeSelect>
+          <NativeSelect name="assigneeId" defaultValue={search.assigneeId ?? ''} wrapperClassName="w-auto" aria-label="Assignee">
             <option value="">Any assignee</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
             ))}
-          </select>
-          <select name="market" defaultValue={search.market ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="Market">
+          </NativeSelect>
+          <NativeSelect name="market" defaultValue={search.market ?? ''} wrapperClassName="w-auto" aria-label="Market">
             <option value="">Any market</option>
             {MARKETS.map((m) => (
               <option key={m}>{m}</option>
             ))}
-          </select>
-          <select name="health" defaultValue={search.health ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="Health">
+          </NativeSelect>
+          <NativeSelect name="health" defaultValue={search.health ?? ''} wrapperClassName="w-auto" aria-label="Health">
             <option value="">Any health</option>
             {Object.entries(HEALTH_LABELS).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
             ))}
-          </select>
-          <select name="priority" defaultValue={search.priority ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="Priority">
+          </NativeSelect>
+          <NativeSelect name="priority" defaultValue={search.priority ?? ''} wrapperClassName="w-auto" aria-label="Priority">
             <option value="">Any priority</option>
             {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
             ))}
-          </select>
-          <select name="packageId" defaultValue={search.packageId ?? ''} className="min-h-9 rounded-md border border-border bg-canvas px-2" aria-label="Package">
+          </NativeSelect>
+          <NativeSelect name="packageId" defaultValue={search.packageId ?? ''} wrapperClassName="w-auto" aria-label="Package">
             <option value="">Any package</option>
             {packages.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <label className="flex items-center gap-1 text-muted">
-            <input type="checkbox" name="includeClosed" value="true" defaultChecked={search.includeClosed === 'true'} /> Closed
+            <Checkbox name="includeClosed" value="true" defaultChecked={search.includeClosed === 'true'} /> Closed
           </label>
-          <button type="submit" className="min-h-9 rounded-md border border-border bg-canvas px-3 hover:border-border-strong">
+          <Button variant="outline" type="submit">
             Filter
-          </button>
+          </Button>
         </form>
       </div>
 

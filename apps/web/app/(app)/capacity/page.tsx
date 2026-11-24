@@ -1,5 +1,5 @@
 import { DEPARTMENT_LABELS, shiftWeek, type CapacityView } from '@opshub/shared';
-import { Card, Chip, Label, PageHeader } from '@opshub/ui';
+import { Card, Chip, Label, PageHeader, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@opshub/ui';
 import Link from 'next/link';
 import { api, getMe } from '@/lib/api';
 import { AutoRefresh } from '@/lib/auto-refresh';
@@ -57,38 +57,38 @@ export default async function CapacityPage({ searchParams }: { searchParams: Pro
               </div>
             </header>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-[14px]">
-                <thead>
-                  <tr className="font-mono text-[12px] uppercase text-muted">
-                    <th className="px-5 py-2 font-medium">Person</th>
-                    <th className="px-2 py-2 font-medium">Weekly</th>
-                    <th className="px-2 py-2 font-medium">Leave</th>
-                    <th className="px-2 py-2 font-medium">Available</th>
-                    <th className="px-2 py-2 font-medium">Assigned</th>
-                    <th className="px-2 py-2 font-medium">Load</th>
-                    <th className="px-5 py-2 font-medium">Unestimated</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-alt">
+              <Table className="w-full min-w-[640px] text-left text-[14px]">
+                <TableHeader>
+                  <TableRow className="text-[12px] text-muted">
+                    <TableHead className="px-5 py-2 font-medium">Person</TableHead>
+                    <TableHead className="px-2 py-2 font-medium">Weekly</TableHead>
+                    <TableHead className="px-2 py-2 font-medium">Leave</TableHead>
+                    <TableHead className="px-2 py-2 font-medium">Available</TableHead>
+                    <TableHead className="px-2 py-2 font-medium">Assigned</TableHead>
+                    <TableHead className="px-2 py-2 font-medium">Load</TableHead>
+                    <TableHead className="px-5 py-2 font-medium">Unestimated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {t.members.map((m) => (
-                    <tr key={m.userId} data-testid="capacity-member" data-over={m.over ? 'true' : 'false'}>
-                      <td className="px-5 py-2 font-semibold">{m.name}</td>
-                      <td className="px-2 py-2 font-mono">{hours(m.weeklyCapacityH)}</td>
-                      <td className="px-2 py-2">
+                    <TableRow key={m.userId} data-testid="capacity-member" data-over={m.over ? 'true' : 'false'}>
+                      <TableCell className="px-5 py-2 font-semibold">{m.name}</TableCell>
+                      <TableCell className="px-2 py-2 font-mono">{hours(m.weeklyCapacityH)}</TableCell>
+                      <TableCell className="px-2 py-2">
                         {m.leaveDays ? <Chip tone="warning" className="px-2 py-0 text-[12px]">{m.leaveDays}d</Chip> : null}
                         {m.holidayDays ? <Chip tone="muted" className="ml-1 px-2 py-0 text-[12px]">holiday {m.holidayDays}d</Chip> : null}
                         {!m.leaveDays && !m.holidayDays ? <span className="text-muted">-</span> : null}
-                      </td>
-                      <td className="px-2 py-2 font-mono">{hours(m.availableH)}</td>
-                      <td className={`px-2 py-2 font-mono ${m.over ? 'font-semibold text-error' : ''}`}>{hours(m.assignedH)}</td>
-                      <td className="px-2 py-2">
+                      </TableCell>
+                      <TableCell className="px-2 py-2 font-mono">{hours(m.availableH)}</TableCell>
+                      <TableCell className={`px-2 py-2 font-mono ${m.over ? 'font-semibold text-error' : ''}`}>{hours(m.assignedH)}</TableCell>
+                      <TableCell className="px-2 py-2">
                         <Bar m={m} />
-                      </td>
-                      <td className="px-5 py-2 font-mono text-muted">{m.unestimatedCount || '-'}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="px-5 py-2 font-mono text-muted">{m.unestimatedCount || '-'}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </Card>
         ))}

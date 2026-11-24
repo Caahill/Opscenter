@@ -1,5 +1,5 @@
 import { CHANNELS, type MeView, type SearchResultsView } from '@opshub/shared';
-import { Card, EmptyState, Label, PageHeader } from '@opshub/ui';
+import { Button, Card, EmptyState, Input, Label, NativeSelect, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { PriorityChip, StatusChip } from '@/lib/chips';
@@ -18,20 +18,20 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeader title="Search" description='Client name plus a word finds old mail fastest, e.g. "Demo renewal". Contact addresses and numbers are never searchable.' />
       <form className="mb-6 grid gap-2 md:grid-cols-[1fr_140px_150px_150px_auto]" action="/search">
-        <input name="q" defaultValue={q} aria-label="Search" placeholder="Client and keyword" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
-        <select name="channel" defaultValue={sp.channel ?? ''} aria-label="Channel" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]">
+        <Input name="q" defaultValue={q} aria-label="Search" placeholder="Client and keyword" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
+        <NativeSelect name="channel" defaultValue={sp.channel ?? ''} aria-label="Channel" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]">
           <option value="">Any channel</option>
           {CHANNELS.map((c) => (
             <option key={c} value={c}>
               {c === 'EMAIL' ? 'Email' : 'WhatsApp'}
             </option>
           ))}
-        </select>
-        <input type="date" name="from" defaultValue={sp.from ?? ''} aria-label="From date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
-        <input type="date" name="to" defaultValue={sp.to ?? ''} aria-label="To date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
-        <button type="submit" className="min-h-10 rounded-xl bg-primary px-4 font-semibold text-on-primary">
+        </NativeSelect>
+        <Input type="date" name="from" defaultValue={sp.from ?? ''} aria-label="From date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
+        <Input type="date" name="to" defaultValue={sp.to ?? ''} aria-label="To date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-[15px]" />
+        <Button variant="default" type="submit">
           Search
-        </button>
+        </Button>
       </form>
 
       {results ? (

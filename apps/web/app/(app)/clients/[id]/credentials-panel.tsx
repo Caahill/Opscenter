@@ -1,6 +1,6 @@
 'use client';
 import type { CredentialRevealView, CredentialView, TaskView, UserView } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Input, Label, NativeSelect } from '@opshub/ui';
 import { useEffect, useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
 import { formatDate } from '@/lib/format';
@@ -24,9 +24,9 @@ function Reveal({ credential }: { credential: CredentialView }) {
           <p>User: {secret.username}</p>
           <p>Password: {secret.password}</p>
           {secret.notes ? <p>{secret.notes}</p> : null}
-          <button type="button" className="mt-1 text-[12px] text-link" onClick={() => setSecret(null)}>
+          <Button variant="link" size="inline" className="mt-1" type="button"  onClick={() => setSecret(null)}>
             Hide
-          </button>
+          </Button>
         </div>
       ) : (
         <Button
@@ -89,18 +89,18 @@ export function CredentialsPanel({
                   <li key={g.id} className="flex items-center gap-2">
                     {g.userName} for {g.taskTitle}, until {g.expiresAt ? formatDate(g.expiresAt) : ''}
                     {canManage ? (
-                      <button type="button" className="text-link" onClick={() => run(() => send('DELETE', `/grants/${g.id}`))}>
+                      <Button variant="link" size="inline" type="button"  onClick={() => run(() => send('DELETE', `/grants/${g.id}`))}>
                         Revoke
-                      </button>
+                      </Button>
                     ) : null}
                   </li>
                 ))}
               </ul>
             ) : null}
             {canManage && grantFor !== c.id ? (
-              <button type="button" className="mt-1 text-[13px] text-link" onClick={() => setGrantFor(c.id)}>
+              <Button variant="link" size="inline" className="mt-1" type="button"  onClick={() => setGrantFor(c.id)}>
                 Grant for a task
-              </button>
+              </Button>
             ) : null}
             {canManage && grantFor === c.id ? (
               <form
@@ -111,22 +111,22 @@ export function CredentialsPanel({
                   if (ok) setGrantFor(null);
                 }}
               >
-                <select className={inputClass} required value={grant.userId} onChange={(e) => setGrant({ ...grant, userId: e.target.value })} aria-label="Person">
+                <NativeSelect required value={grant.userId} onChange={(e) => setGrant({ ...grant, userId: e.target.value })} aria-label="Person">
                   <option value="">Person</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name}
                     </option>
                   ))}
-                </select>
-                <select className={inputClass} required value={grant.taskId} onChange={(e) => setGrant({ ...grant, taskId: e.target.value })} aria-label="Task">
+                </NativeSelect>
+                <NativeSelect required value={grant.taskId} onChange={(e) => setGrant({ ...grant, taskId: e.target.value })} aria-label="Task">
                   <option value="">Task</option>
                   {tasks.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.title}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={busy}>
                     Grant
@@ -148,22 +148,20 @@ export function CredentialsPanel({
       ) : null}
       {canManage && adding ? (
         <form onSubmit={add} className="mt-4 grid gap-2">
-          <select className={inputClass} value={form.system} onChange={(e) => setForm({ ...form, system: e.target.value })} aria-label="System">
+          <NativeSelect value={form.system} onChange={(e) => setForm({ ...form, system: e.target.value })} aria-label="System">
             {SYSTEMS.map((s) => (
               <option key={s}>{s}</option>
             ))}
-          </select>
-          <input className={inputClass} placeholder="Label, e.g. Hosting panel" required value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
-          <input className={inputClass} placeholder="Username" required autoComplete="off" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
-          <input
-            className={inputClass}
+          </NativeSelect>
+          <Input placeholder="Label, e.g. Hosting panel" required value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          <Input placeholder="Username" required autoComplete="off" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+          <Input
             placeholder="Password"
             type="password"
             required
             autoComplete="new-password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, password: e.target.value })} />
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>
               Save to vault

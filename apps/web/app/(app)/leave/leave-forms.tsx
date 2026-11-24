@@ -1,6 +1,18 @@
 'use client';
 import { LEAVE_KIND_LABELS, LEAVE_KINDS, type LeaveKind, type LeaveView, type UserView } from '@opshub/shared';
-import { Button, inputClass } from '@opshub/ui';
+import {
+  Button,
+  buttonVariants,
+  Checkbox,
+  cn,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  ConfirmButton,
+  Input,
+  NativeSelect,
+  Textarea,
+} from '@opshub/ui';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
 
@@ -32,41 +44,40 @@ export function LeaveForm({ users }: { users: UserView[] }) {
 
   return (
     <form onSubmit={save} className="mt-3 grid gap-2">
-      <select className={inputClass} required aria-label="Person" value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}>
+      <NativeSelect required aria-label="Person" value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}>
         <option value="">Who is out?</option>
         {users.map((u) => (
           <option key={u.id} value={u.id}>
             {u.name}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       <div className="grid grid-cols-2 gap-2">
         <label className="text-[13px] text-muted">
           From
-          <input className={inputClass} type="date" required value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+          <Input type="date" required value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
         </label>
         <label className="text-[13px] text-muted">
           To
-          <input className={inputClass} type="date" disabled={form.halfDay} value={form.halfDay ? form.startDate : form.endDate} min={form.startDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+          <Input type="date" disabled={form.halfDay} value={form.halfDay ? form.startDate : form.endDate} min={form.startDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
         </label>
       </div>
       <label className="flex min-h-9 items-center gap-2 text-[14px]">
-        <input type="checkbox" checked={form.halfDay} onChange={(e) => setForm({ ...form, halfDay: e.target.checked })} />
+        <Checkbox checked={form.halfDay} onCheckedChange={(v) => setForm({ ...form, halfDay: v === true })} />
         Half day
       </label>
-      <select className={inputClass} aria-label="Kind" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as LeaveKind })}>
+      <NativeSelect aria-label="Kind" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as LeaveKind })}>
         {LEAVE_KINDS.map((k) => (
           <option key={k} value={k}>
             {LEAVE_KIND_LABELS[k]}
           </option>
         ))}
-      </select>
-      <textarea
-        className={`${inputClass} min-h-16`}
+      </NativeSelect>
+      <Textarea
+        className="min-h-16"
         placeholder="Reason (HR and Admin only, stored encrypted)"
         value={form.reason}
-        onChange={(e) => setForm({ ...form, reason: e.target.value })}
-      />
+        onChange={(e) => setForm({ ...form, reason: e.target.value })} />
       <Button type="submit" disabled={busy}>
         Record leave
       </Button>
@@ -89,25 +100,25 @@ export function LeaveRowActions({ leave }: { leave: LeaveView }) {
 
   return (
     <>
-      <button type="button" className="text-link" onClick={() => setEditing((v) => !v)} aria-expanded={editing}>
+      <Button type="button" variant="link" size="inline" onClick={() => setEditing((v) => !v)} aria-expanded={editing}>
         Change dates
-      </button>
-      <button
-        type="button"
-        className="text-error"
+      </Button>
+      <ConfirmButton
+        className={cn(buttonVariants({ variant: 'link', size: 'inline' }), 'text-error')}
         disabled={busy}
-        onClick={() => {
-          if (window.confirm(`Delete ${leave.userName}'s leave? Plans and alerts update straight away.`)) void run(() => send('DELETE', `/leave/${leave.id}`));
-        }}
-      >
-        Delete
-      </button>
+        trigger="Delete"
+        title={`Delete ${leave.userName}'s leave?`}
+        description="Plans, capacity and alerts update straight away."
+        confirmLabel="Delete leave"
+        destructive
+        onConfirm={() => run(() => send('DELETE', `/leave/${leave.id}`))}
+      />
       {editing ? (
         <form onSubmit={save} className="mt-2 grid w-full grid-cols-[1fr_1fr_auto_auto] items-center gap-2">
-          <input className={inputClass} type="date" aria-label="From" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
-          <input className={inputClass} type="date" aria-label="To" disabled={form.halfDay} value={form.halfDay ? form.startDate : form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+          <Input type="date" aria-label="From" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+          <Input type="date" aria-label="To" disabled={form.halfDay} value={form.halfDay ? form.startDate : form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
           <label className="flex items-center gap-1 text-[13px]">
-            <input type="checkbox" checked={form.halfDay} onChange={(e) => setForm({ ...form, halfDay: e.target.checked })} />
+            <Checkbox checked={form.halfDay} onCheckedChange={(v) => setForm({ ...form, halfDay: v === true })} />
             Half
           </label>
           <Button type="submit" variant="tertiary" disabled={busy}>
@@ -131,10 +142,10 @@ export function HolidayForm() {
   return (
     <form onSubmit={save} className="mt-4 grid gap-2 border-t border-surface-alt pt-4">
       <div className="grid grid-cols-[1fr_72px] gap-2">
-        <input className={inputClass} type="date" required aria-label="Holiday date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        <input className={inputClass} required aria-label="Location" maxLength={2} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value.toUpperCase() })} />
+        <Input type="date" required aria-label="Holiday date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        <Input required aria-label="Location" maxLength={2} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value.toUpperCase() })} />
       </div>
-      <input className={inputClass} required placeholder="Holiday name, e.g. Diwali" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <Input required placeholder="Holiday name, e.g. Diwali" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
       <Button type="submit" variant="secondary" disabled={busy}>
         Add holiday
       </Button>
@@ -146,17 +157,17 @@ export function HolidayForm() {
 export function RemoveHoliday({ id, name }: { id: string; name: string }) {
   const { run, busy } = useAction();
   return (
-    <button
-      type="button"
-      className="font-mono text-[12px] text-error"
+    <ConfirmButton
+      className={cn(buttonVariants({ variant: 'link', size: 'inline' }), 'text-xs text-error')}
       disabled={busy}
       aria-label={`Remove ${name}`}
-      onClick={() => {
-        if (window.confirm(`Remove ${name}?`)) void run(() => send('DELETE', `/holidays/${id}`));
-      }}
-    >
-      Remove
-    </button>
+      trigger="Remove"
+      title={`Remove ${name}?`}
+      description="Capacity for that day goes back to normal working hours."
+      confirmLabel="Remove holiday"
+      destructive
+      onConfirm={() => run(() => send('DELETE', `/holidays/${id}`))}
+    />
   );
 }
 
@@ -211,24 +222,24 @@ export function BulkHolidayForm({ existing }: { existing: Array<{ date: string; 
   }
 
   return (
-    <details className="mt-4 border-t border-surface-alt pt-4">
-      <summary className="cursor-pointer text-[14px] font-semibold text-accent">Paste a full holiday list</summary>
+    <Collapsible className="mt-4 border-t border-surface-alt pt-4">
+      <CollapsibleTrigger className="text-[14px] font-semibold text-body hover:underline">Paste a full holiday list</CollapsibleTrigger>
+      <CollapsibleContent>
       <form onSubmit={save} className="mt-3 grid gap-2">
         <p className="text-[13px] text-muted">One holiday per line, for example “2026-11-08 Diwali” or “25/12/2026, Christmas”.</p>
-        <textarea
-          className={`${inputClass} min-h-32 font-mono text-[13px]`}
+        <Textarea
+          className="min-h-32 font-mono text-[13px]"
           aria-label="Holiday list"
           placeholder={'2026-11-08 Diwali\n2026-12-25 Christmas'}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
+          onChange={(e) => setText(e.target.value)} />
         <div className="grid grid-cols-[1fr_72px] items-center gap-2">
           <p className="text-[13px] text-muted">
             {lines.length === 0
               ? 'Nothing pasted yet.'
               : `${toAdd.length} to add${skipped ? `, ${skipped} already listed` : ''}${bad.length ? `, ${bad.length} not understood` : ''}.`}
           </p>
-          <input className={inputClass} aria-label="Location for pasted holidays" maxLength={2} value={location} onChange={(e) => setLocation(e.target.value.toUpperCase())} />
+          <Input aria-label="Location for pasted holidays" maxLength={2} value={location} onChange={(e) => setLocation(e.target.value.toUpperCase())} />
         </div>
         {bad.length ? (
           <ul className="text-[13px] text-error">
@@ -243,6 +254,7 @@ export function BulkHolidayForm({ existing }: { existing: Array<{ date: string; 
         {done ? <p className="text-[14px] text-success">{done}</p> : null}
         {error ? <p className="text-[14px] text-error">{error}</p> : null}
       </form>
-    </details>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

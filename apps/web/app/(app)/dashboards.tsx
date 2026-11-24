@@ -19,7 +19,7 @@ import {
   type ThreadSummaryView,
   type TlDashboardView,
 } from '@opshub/shared';
-import { Card, Label } from '@opshub/ui';
+import { Card, Label, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@opshub/ui';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatDate, formatDay, formatLeave, formatMoney, hours } from '@/lib/format';
@@ -161,30 +161,30 @@ function Leave({ title, list }: { title: string; list: LeaveView[] }) {
 function TeamLoad({ teams }: { teams: TeamLoadView[] }) {
   return (
     <Card className="overflow-x-auto p-0">
-      <table className="w-full min-w-[520px] text-[15px]">
-        <thead>
-          <tr className="text-left font-mono text-[12px] uppercase text-muted">
-            <th className="px-4 py-3 font-normal">Team this week</th>
-            <th className="px-4 py-3 font-normal">Assigned / available</th>
-            <th className="px-4 py-3 font-normal">Load</th>
-            <th className="px-4 py-3 text-right font-normal">Overdue</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-surface-alt">
+      <Table className="w-full min-w-[520px] text-[15px]">
+        <TableHeader>
+          <TableRow className="text-left text-[12px] text-muted">
+            <TableHead className="px-4 py-3 font-normal">Team this week</TableHead>
+            <TableHead className="px-4 py-3 font-normal">Assigned / available</TableHead>
+            <TableHead className="px-4 py-3 font-normal">Load</TableHead>
+            <TableHead className="px-4 py-3 text-right font-normal">Overdue</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {teams.map((t) => (
-            <tr key={t.teamId ?? t.teamName} data-testid="team-load">
-              <td className="px-4 py-2 font-medium">{t.teamName}</td>
-              <td className="px-4 py-2 font-mono text-[13px]">
+            <TableRow key={t.teamId ?? t.teamName} data-testid="team-load">
+              <TableCell className="px-4 py-2 font-medium">{t.teamName}</TableCell>
+              <TableCell className="px-4 py-2 font-mono text-[13px]">
                 {hours(t.assignedH)} / {hours(t.availableH)}
-              </td>
-              <td className="px-4 py-2">
+              </TableCell>
+              <TableCell className="px-4 py-2">
                 <LoadBar m={t} />
-              </td>
-              <td className={`px-4 py-2 text-right font-mono text-[13px] ${t.overdue ? 'font-semibold text-error' : 'text-muted'}`}>{t.overdue}</td>
-            </tr>
+              </TableCell>
+              <TableCell className={`px-4 py-2 text-right font-mono text-[13px] ${t.overdue ? 'font-semibold text-error' : 'text-muted'}`}>{t.overdue}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </Card>
   );
 }

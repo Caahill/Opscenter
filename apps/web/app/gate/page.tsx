@@ -1,4 +1,4 @@
-import { Button, Card, Label, inputClass } from '@opshub/ui';
+import { Button, Card, Input, Label } from '@opshub/ui';
 import { notFound } from 'next/navigation';
 import { isStaging, safeNext } from '@/lib/staging-gate';
 
@@ -21,7 +21,7 @@ export default async function GatePage({ searchParams }: { searchParams: Promise
           <label htmlFor="staging-password">
             <Label>Staging password</Label>
           </label>
-          <input id="staging-password" name="password" type="password" autoComplete="current-password" required autoFocus className={`${inputClass} mt-2`} />
+          <Input id="staging-password" name="password" type="password" autoComplete="current-password" required autoFocus className="mt-2" />
           <Button type="submit" className="mt-4 w-full rounded-xl px-[18px]">
             Continue
           </Button>

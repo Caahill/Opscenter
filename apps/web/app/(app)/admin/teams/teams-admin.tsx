@@ -1,6 +1,6 @@
 'use client';
 import { DEPARTMENT_LABELS, DEPARTMENTS, type Department, type TeamView, type UserView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label, NativeSelect } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { send } from '@/lib/client';
@@ -34,14 +34,14 @@ export function TeamsAdmin({ teams, leaders }: { teams: TeamView[]; leaders: Use
       <Card className="mb-6">
         <Label>Add a team</Label>
         <form onSubmit={create} className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-          <input className={inputClass} placeholder="Team name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <select className={inputClass} value={department} onChange={(e) => setDepartment(e.target.value as Department)}>
+          <Input placeholder="Team name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <NativeSelect value={department} onChange={(e) => setDepartment(e.target.value as Department)}>
             {DEPARTMENTS.map((d) => (
               <option key={d} value={d}>
                 {DEPARTMENT_LABELS[d]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button type="submit">Add team</Button>
         </form>
       </Card>
@@ -57,19 +57,18 @@ export function TeamsAdmin({ teams, leaders }: { teams: TeamView[]; leaders: Use
             <label className="mt-4 block text-[13px] text-muted" htmlFor={`leader-${t.id}`}>
               Team leader
             </label>
-            <select
+            <NativeSelect
               id={`leader-${t.id}`}
-              className={`${inputClass} mt-1`}
+              className="mt-1"
               value={t.leaderId ?? ''}
-              onChange={(e) => act(() => send('PATCH', `/teams/${t.id}`, { leaderId: e.target.value || null }))}
-            >
+              onChange={(e) => act(() => send('PATCH', `/teams/${t.id}`, { leaderId: e.target.value || null }))}>
               <option value="">No leader</option>
               {leaders.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Card>
         ))}
       </div>

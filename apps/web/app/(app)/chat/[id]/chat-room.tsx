@@ -2,7 +2,7 @@
 // One channel: history, live messages and the composer. Mentions are typed as @name or #record and
 // sent as tokens; the API re-labels every token for each reader (PRD 5.2).
 import { mentionToken, MENTION_TOKEN, type ChatHistoryView, type ChatMessageView, type MentionOptionView } from '@opshub/shared';
-import { Button, inputClass } from '@opshub/ui';
+import { Button, Textarea } from '@opshub/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
@@ -152,9 +152,9 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
     <div className="rounded-lg border border-border bg-canvas">
       <div className="max-h-[60vh] min-h-[240px] overflow-y-auto px-4 py-4" data-testid="chat-messages">
         {nextBefore ? (
-          <button type="button" onClick={earlier} className="mb-4 text-[14px] text-link">
+          <Button variant="link" size="inline" className="mb-4" type="button" onClick={earlier}>
             Load earlier messages
-          </button>
+          </Button>
         ) : null}
         {messages.length === 0 ? <p className="py-8 text-center text-muted">No messages yet. Say hello.</p> : null}
         <ul className="space-y-4">
@@ -175,10 +175,16 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
           <ul role="listbox" aria-label="Mention suggestions" className="absolute bottom-full left-3 mb-1 w-[min(360px,calc(100%-24px))] overflow-hidden rounded-lg border border-border bg-canvas shadow-lg">
             {options.map((o, i) => (
               <li key={`${o.type}:${o.id}`} role="option" aria-selected={i === active}>
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => choose(o)} className={`flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-[14px] ${i === active ? 'bg-surface-alt' : 'hover:bg-surface'}`}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => choose(o)}
+                  className={`h-auto w-full justify-between gap-3 rounded-none px-3 py-2 text-left font-normal ${i === active ? 'bg-surface-alt' : ''}`}
+                >
                   <span className="truncate">{o.label}</span>
-                  <span className="font-mono text-[11px] text-muted">{o.hint ?? 'Person'}</span>
-                </button>
+                  <span className="text-xs text-muted">{o.hint ?? 'Person'}</span>
+                </Button>
               </li>
             ))}
           </ul>
@@ -186,16 +192,14 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
         <label htmlFor="chat-input" className="sr-only">
           Message
         </label>
-        <textarea
+        <Textarea
           id="chat-input"
           ref={box}
           rows={2}
-          className={inputClass}
           placeholder="Write a message. Type @ for a person, # for a task, project or client."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKey}
-        />
+          onKeyDown={onKey} />
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-[12px] text-muted">Client emails, numbers and logins are hidden when you send.</p>
           <Button onClick={submit} disabled={busy || !text.trim()}>

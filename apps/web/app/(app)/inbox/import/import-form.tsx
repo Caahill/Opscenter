@@ -1,6 +1,6 @@
 'use client';
 import type { ClientView, ImportResultView, ProjectView } from '@opshub/shared';
-import { Button, Card, inputClass } from '@opshub/ui';
+import { Button, Card, NativeSelect } from '@opshub/ui';
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
 import { getJson, sendForm, useAction } from '@/lib/client';
@@ -30,27 +30,27 @@ export function ImportForm({ clients }: { clients: ClientView[] }) {
   return (
     <Card>
       <form onSubmit={submit} className="grid gap-3 md:grid-cols-2" aria-label="Import a WhatsApp chat">
-        <select className={inputClass} aria-label="Client" required value={clientId} onChange={(e) => setClientId(e.target.value)}>
+        <NativeSelect aria-label="Client" required value={clientId} onChange={(e) => setClientId(e.target.value)}>
           <option value="">Which client is this chat with?</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.companyName}
             </option>
           ))}
-        </select>
-        <select className={inputClass} aria-label="Project" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+        </NativeSelect>
+        <NativeSelect aria-label="Project" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
           <option value="">No particular project</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.packageName ?? p.department}
             </option>
           ))}
-        </select>
-        <select className={inputClass} aria-label="Date format" value={dateOrder} onChange={(e) => setDateOrder(e.target.value)}>
+        </NativeSelect>
+        <NativeSelect aria-label="Date format" value={dateOrder} onChange={(e) => setDateOrder(e.target.value)}>
           <option value="">Detect the date format</option>
           <option value="DMY">Day first (31/12/2026)</option>
           <option value="MDY">Month first (12/31/2026)</option>
-        </select>
+        </NativeSelect>
         <input type="file" accept=".txt,.zip" aria-label="Chat export" required className="text-[14px]" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         <div className="md:col-span-2">
           <Button type="submit" disabled={busy || !clientId || !file}>

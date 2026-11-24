@@ -17,8 +17,9 @@ test('PRD 1.1: a PM moves a project between stages and the move is logged', asyn
 
   await signIn(page, PM);
   await page.goto(`/projects/${project.id}`);
-  page.once('dialog', (d) => d.accept()); // the checklist is incomplete: confirm the logged override
   await page.getByRole('button', { name: 'Design (Figma)' }).click();
+  // The checklist is incomplete: confirm the logged override in the dialog.
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Move anyway' }).click();
   await expect(page.locator('[aria-current="step"]')).toHaveText('Design (Figma)');
   await expect(page.getByText('moved from Requirements and sitemap to Design (Figma) (checklist override)')).toBeVisible();
 

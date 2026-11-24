@@ -1,6 +1,6 @@
 'use client';
 import { MARKETS, type ClientView } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Input, Label, NativeSelect } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
@@ -38,19 +38,17 @@ export function NewClientForm() {
     <Card className="mb-6">
       <Label>New client</Label>
       <form onSubmit={submit} className="mt-3 grid gap-3 md:grid-cols-2">
-        <input className={inputClass} placeholder="Company name" required value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
-        <input className={inputClass} placeholder="Website, e.g. example.com" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
-        <select className={inputClass} value={form.market} onChange={(e) => setForm({ ...form, market: e.target.value })} aria-label="Market">
+        <Input placeholder="Company name" required value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
+        <Input placeholder="Website, e.g. example.com" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+        <NativeSelect value={form.market} onChange={(e) => setForm({ ...form, market: e.target.value })} aria-label="Market">
           {MARKETS.map((m) => (
             <option key={m}>{m}</option>
           ))}
-        </select>
-        <input
-          className={inputClass}
+        </NativeSelect>
+        <Input
           placeholder="Email domains for auto-linking, comma separated"
           value={form.emailDomains}
-          onChange={(e) => setForm({ ...form, emailDomains: e.target.value })}
-        />
+          onChange={(e) => setForm({ ...form, emailDomains: e.target.value })} />
         <div className="flex items-center gap-3 md:col-span-2">
           <Button type="submit" disabled={busy}>
             Create client

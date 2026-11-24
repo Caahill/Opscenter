@@ -1,6 +1,6 @@
 'use client';
 import type { NotificationPreferenceView } from '@opshub/shared';
-import { Button, Card, Label } from '@opshub/ui';
+import { Button, Card, Checkbox, Label, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@opshub/ui';
 import { useEffect, useState } from 'react';
 import { getJson, send, useAction } from '@/lib/client';
 
@@ -20,32 +20,32 @@ export function NotificationPreferences({ initial }: { initial: NotificationPref
     <Card>
       <Label>What reaches you</Label>
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[420px] text-[15px]">
-          <thead>
-            <tr className="text-left font-mono text-[12px] uppercase text-muted">
-              <th className="py-2 font-normal">Alert</th>
-              <th className="w-24 py-2 text-center font-normal">In app</th>
-              <th className="w-24 py-2 text-center font-normal">Email</th>
-              <th className="w-24 py-2 text-center font-normal">Push</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-alt">
+        <Table className="w-full min-w-[420px] text-[15px]">
+          <TableHeader>
+            <TableRow className="text-left text-[12px] text-muted">
+              <TableHead className="py-2 font-normal">Alert</TableHead>
+              <TableHead className="w-24 py-2 text-center font-normal">In app</TableHead>
+              <TableHead className="w-24 py-2 text-center font-normal">Email</TableHead>
+              <TableHead className="w-24 py-2 text-center font-normal">Push</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {prefs.map((p) => (
-              <tr key={p.category} data-testid={`pref-${p.category}`}>
-                <td className="py-2">{p.label}</td>
-                <td className="py-2 text-center">
-                  <input type="checkbox" checked disabled aria-label={`${p.label}: in app (always on)`} />
-                </td>
-                <td className="py-2 text-center">
-                  <input type="checkbox" checked={p.email} onChange={() => toggle(p.category, 'email')} aria-label={`${p.label}: email`} />
-                </td>
-                <td className="py-2 text-center">
-                  <input type="checkbox" checked={p.push} onChange={() => toggle(p.category, 'push')} aria-label={`${p.label}: push`} />
-                </td>
-              </tr>
+              <TableRow key={p.category} data-testid={`pref-${p.category}`}>
+                <TableCell className="py-2">{p.label}</TableCell>
+                <TableCell className="py-2 text-center">
+                  <Checkbox checked disabled aria-label={`${p.label}: in app (always on)`} />
+                </TableCell>
+                <TableCell className="py-2 text-center">
+                  <Checkbox checked={p.email} onCheckedChange={() => toggle(p.category, 'email')} aria-label={`${p.label}: email`} />
+                </TableCell>
+                <TableCell className="py-2 text-center">
+                  <Checkbox checked={p.push} onCheckedChange={() => toggle(p.category, 'push')} aria-label={`${p.label}: push`} />
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className="mt-4 flex items-center gap-3">
         <Button onClick={save} disabled={busy}>

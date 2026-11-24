@@ -11,7 +11,7 @@ import {
   type TaskDetailView,
   type UserView,
 } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Checkbox, Input, Label, NativeSelect, Textarea } from '@opshub/ui';
 import { useState, type FormEvent } from 'react';
 import { CapacityWarning } from '@/lib/capacity-warning';
 import { send, useAction } from '@/lib/client';
@@ -28,34 +28,34 @@ export function TaskQuickUpdate({ task }: { task: TaskDetailView }) {
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-[13px] text-muted">
           Status
-          <select
+          <NativeSelect
             aria-label="Status"
-            className={inputClass}
             value={task.statusType}
             disabled={busy}
-            onChange={(e) => update({ statusType: e.target.value })}
-          >
+            onChange={(e) => update({ statusType: e.target.value })}>
             {STATUS_TYPES.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <div>
           <p className="text-[13px] text-muted">Progress</p>
           <div className="flex overflow-hidden rounded-md border border-border" role="group" aria-label="Progress">
             {STEPS.map((p) => (
-              <button
+              <Button
                 key={p}
                 type="button"
+                variant={task.progressPct === p ? 'default' : 'ghost'}
+                size="sm"
                 disabled={busy}
                 aria-pressed={task.progressPct === p}
                 onClick={() => update({ progressPct: p })}
-                className={`min-h-10 px-3 font-mono text-[13px] ${task.progressPct === p ? 'bg-primary text-on-primary' : 'bg-canvas text-muted hover:text-body'}`}
+                className="rounded-none border-r border-border px-2.5 tabular-nums shadow-none last:border-r-0"
               >
                 {p}%
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -96,40 +96,39 @@ export function TaskEditor({ task, users }: { task: TaskDetailView; users: UserV
     <Card>
       <Label>Edit</Label>
       <form onSubmit={save} className="mt-3 grid gap-2">
-        <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} aria-label="Title" required />
-        <select className={inputClass} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as typeof form.type })} aria-label="Type">
+        <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} aria-label="Title" required />
+        <NativeSelect value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as typeof form.type })} aria-label="Type">
           {TASK_TYPES.map((t) => (
             <option key={t} value={t}>
               {TASK_TYPE_LABELS[t]}
             </option>
           ))}
-        </select>
-        <select className={inputClass} value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} aria-label="Assignee">
+        </NativeSelect>
+        <NativeSelect value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} aria-label="Assignee">
           <option value="">Unassigned</option>
           {users.map((u) => (
             <option key={u.id} value={u.id}>
               {u.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {form.assigneeId && form.assigneeId !== task.assigneeId ? (
           <CapacityWarning assigneeId={form.assigneeId} day={form.dueDate || task.plannedDate || null} />
         ) : null}
-        <select className={inputClass} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as typeof form.priority })} aria-label="Priority">
+        <NativeSelect value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as typeof form.priority })} aria-label="Priority">
           {PRIORITIES.map((p) => (
             <option key={p} value={p}>
               {PRIORITY_LABELS[p]}
             </option>
           ))}
-        </select>
-        <input className={inputClass} type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} aria-label="Due date" />
-        <input className={inputClass} inputMode="decimal" placeholder="Estimate hours" value={form.estimateH} onChange={(e) => setForm({ ...form, estimateH: e.target.value })} />
-        <textarea
-          className={`${inputClass} min-h-24`}
+        </NativeSelect>
+        <Input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} aria-label="Due date" />
+        <Input inputMode="decimal" placeholder="Estimate hours" value={form.estimateH} onChange={(e) => setForm({ ...form, estimateH: e.target.value })} />
+        <Textarea
+          className="min-h-24"
           placeholder="Description. Client emails, phone numbers and logins are removed on save."
           value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
+          onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Button type="submit" disabled={busy}>
           Save
         </Button>
@@ -148,13 +147,13 @@ export function TaskChecklist({ taskId, items, canAdd }: { taskId: string; items
         {items.map((i) => (
           <li key={i.id} className="flex items-center justify-between gap-2">
             <label className="flex min-h-9 items-center gap-2 text-[14px]">
-              <input type="checkbox" checked={Boolean(i.done)} onChange={(e) => run(() => send('PATCH', `/checklist/${i.id}`, { done: e.target.checked }))} />
+              <Checkbox checked={Boolean(i.done)} onCheckedChange={(v) => run(() => send('PATCH', `/checklist/${i.id}`, { done: v === true }))} />
               {i.text}
             </label>
             {canAdd ? (
-              <button type="button" className="text-[12px] text-muted hover:text-error" onClick={() => run(() => send('DELETE', `/checklist/${i.id}`))}>
+              <Button variant="ghost" size="inline" className="text-muted hover:text-error text-xs" type="button"  onClick={() => run(() => send('DELETE', `/checklist/${i.id}`))}>
                 Remove
-              </button>
+              </Button>
             ) : null}
           </li>
         ))}
@@ -168,7 +167,7 @@ export function TaskChecklist({ taskId, items, canAdd }: { taskId: string; items
             if (await run(() => send('POST', `/tasks/${taskId}/checklist`, { text }))) setText('');
           }}
         >
-          <input className={inputClass} placeholder="Add an item" value={text} onChange={(e) => setText(e.target.value)} required />
+          <Input placeholder="Add an item" value={text} onChange={(e) => setText(e.target.value)} required />
           <Button type="submit" variant="tertiary">
             Add
           </Button>
@@ -190,7 +189,7 @@ export function SubtaskForm({ task }: { task: TaskDetailView }) {
         if (await run(() => send('POST', '/tasks', { projectId: task.projectId, parentTaskId: task.id, title }))) setTitle('');
       }}
     >
-      <input className={inputClass} placeholder="Add a subtask" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <Input placeholder="Add a subtask" value={title} onChange={(e) => setTitle(e.target.value)} required />
       <Button type="submit" variant="tertiary" disabled={busy}>
         Add
       </Button>
@@ -222,7 +221,7 @@ export function Comments({ taskId, comments, timezone }: { taskId: string; comme
           if (await run(() => send('POST', `/tasks/${taskId}/comments`, { body }))) setBody('');
         }}
       >
-        <textarea className={`${inputClass} min-h-20`} placeholder="Write a comment" value={body} onChange={(e) => setBody(e.target.value)} required />
+        <Textarea className="min-h-20" placeholder="Write a comment" value={body} onChange={(e) => setBody(e.target.value)} required />
         <div>
           <Button type="submit" disabled={busy}>
             Comment

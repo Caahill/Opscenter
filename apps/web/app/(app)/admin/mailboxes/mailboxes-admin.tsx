@@ -1,6 +1,6 @@
 'use client';
 import type { InboxSettingsView, MailboxView, UserView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label, NativeSelect } from '@opshub/ui';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
 import { formatDateTime } from '@/lib/format';
@@ -62,16 +62,16 @@ export function MailboxesAdmin({ mailboxes, pms, settings, notice }: { mailboxes
           {live ? 'You will sign in to the mailbox with Google and allow Ops Hub to read and send mail. History from the last 3 years is imported.' : 'GMAIL_MODE is fake: mail arrives through the inbox simulator.'}
         </p>
         <form onSubmit={add} className="mt-3 grid gap-2">
-          <input className={inputClass} type="email" aria-label="Mailbox address" placeholder="support@syspreedigital.com" required={!live} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <input className={inputClass} aria-label="Label" placeholder="Label, e.g. Support" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
-          <select className={inputClass} aria-label="Owner" value={form.ownerUserId} onChange={(e) => setForm({ ...form, ownerUserId: e.target.value })}>
+          <Input type="email" aria-label="Mailbox address" placeholder="support@syspreedigital.com" required={!live} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <Input aria-label="Label" placeholder="Label, e.g. Support" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          <NativeSelect aria-label="Owner" value={form.ownerUserId} onChange={(e) => setForm({ ...form, ownerUserId: e.target.value })}>
             <option value="">Shared mailbox</option>
             {pms.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}'s own mailbox
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button type="submit" disabled={busy}>
             {live ? 'Connect with Google' : 'Add mailbox'}
           </Button>

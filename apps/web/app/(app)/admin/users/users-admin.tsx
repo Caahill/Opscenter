@@ -1,6 +1,6 @@
 'use client';
 import { ROLE_LABELS, ROLES, type Role, type TeamView, type UserView } from '@opshub/shared';
-import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, Input, Label, NativeSelect } from '@opshub/ui';
 import { useState, type FormEvent } from 'react';
 import { send, useAction } from '@/lib/client';
 
@@ -10,15 +10,17 @@ function RolePicker({ value, onChange }: { value: Role[]; onChange: (roles: Role
       {ROLES.map((r) => {
         const on = value.includes(r);
         return (
-          <button
+          <Button
             key={r}
             type="button"
+            variant={on ? 'default' : 'outline'}
+            size="sm"
             aria-pressed={on}
             onClick={() => onChange(on ? value.filter((x) => x !== r) : [...value, r])}
-            className={`min-h-9 rounded-full px-3 font-mono text-[13px] ${on ? 'bg-primary text-on-primary' : 'border border-border bg-canvas text-muted'}`}
+            className="rounded-full"
           >
             {ROLE_LABELS[r]}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -45,19 +47,19 @@ function InviteForm({ teams }: { teams: TeamView[] }) {
     <Card className="mb-6">
       <Label>Invite a user</Label>
       <form onSubmit={submit} className="mt-3 grid gap-3 md:grid-cols-2">
-        <input className={inputClass} placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className={inputClass} placeholder="name@syspreedigital.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input placeholder="name@syspreedigital.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <div className="md:col-span-2">
           <RolePicker value={roles} onChange={setRoles} />
         </div>
-        <select className={inputClass} value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+        <NativeSelect value={teamId} onChange={(e) => setTeamId(e.target.value)}>
           <option value="">No team</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={busy || roles.length === 0}>
             Invite
@@ -117,15 +119,15 @@ function UserRow({ user, teams, isMe }: { user: UserView; teams: TeamView[]; isM
       {editing ? (
         <div className="mt-3 grid gap-3 rounded-lg border border-border bg-canvas p-3 md:grid-cols-[1fr_200px_120px_auto]">
           <RolePicker value={roles} onChange={setRoles} />
-          <select className={inputClass} value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+          <NativeSelect value={teamId} onChange={(e) => setTeamId(e.target.value)}>
             <option value="">No team</option>
             {teams.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
               </option>
             ))}
-          </select>
-          <input className={inputClass} type="number" min={0} max={80} value={capacity} onChange={(e) => setCapacity(e.target.value)} aria-label="Weekly capacity hours" />
+          </NativeSelect>
+          <Input type="number" min={0} max={80} value={capacity} onChange={(e) => setCapacity(e.target.value)} aria-label="Weekly capacity hours" />
           <Button disabled={busy || roles.length === 0} onClick={save}>
             Save
           </Button>

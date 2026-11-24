@@ -1,6 +1,6 @@
 'use client';
 import { taskDay, type LeaveCandidateView, type TaskView } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Label, NativeSelect } from '@opshub/ui';
 import Link from 'next/link';
 import { useState } from 'react';
 import { PriorityChip } from '@/lib/chips';
@@ -25,14 +25,14 @@ function Row({ t, candidates, suggested, canReassign }: { t: TaskView; candidate
       </div>
       {canReassign ? (
         <div className="flex items-center gap-2">
-          <select aria-label={`Reassign ${t.title} to`} className={`${inputClass} w-56`} value={to} onChange={(e) => setTo(e.target.value)}>
+          <NativeSelect aria-label={`Reassign ${t.title} to`} wrapperClassName="w-56" value={to} onChange={(e) => setTo(e.target.value)}>
             <option value="">Choose someone</option>
             {candidates.map((c) => (
               <option key={c.userId} value={c.userId}>
                 {c.name} · {c.onLeave ? 'also away' : `${hours(c.freeH)} free`}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button type="button" variant="tertiary" disabled={busy || !to} onClick={() => run(() => send('PATCH', `/tasks/${t.id}`, { assigneeId: to }))}>
             Reassign
           </Button>

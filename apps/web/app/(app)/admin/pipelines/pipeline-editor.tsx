@@ -1,6 +1,6 @@
 'use client';
 import { STATUS_LABELS, STATUS_TYPES, type PipelineView, type StatusType } from '@opshub/shared';
-import { Button, Card, Chip, inputClass } from '@opshub/ui';
+import { Button, Card, Chip, Input, NativeSelect } from '@opshub/ui';
 import { useState } from 'react';
 import { StatusChip } from '@/lib/chips';
 import { send, useAction } from '@/lib/client';
@@ -87,30 +87,30 @@ export function PipelineEditor({ pipeline, title }: { pipeline: PipelineView; ti
           {rows.map((r, i) => (
             <div key={i} className="grid gap-2 rounded-lg border border-border p-2 md:grid-cols-[auto_1fr_160px_110px_80px_1fr_auto]">
               <div className="flex flex-col">
-                <button type="button" className="text-[12px] text-muted" onClick={() => swap(i, i - 1)} aria-label="Move up">
+                <Button variant="ghost" size="inline" className="text-muted text-xs" type="button"  onClick={() => swap(i, i - 1)} aria-label="Move up">
                   Up
-                </button>
-                <button type="button" className="text-[12px] text-muted" onClick={() => swap(i, i + 1)} aria-label="Move down">
+                </Button>
+                <Button variant="ghost" size="inline" className="text-muted text-xs" type="button"  onClick={() => swap(i, i + 1)} aria-label="Move down">
                   Down
-                </button>
+                </Button>
               </div>
-              <input className={inputClass} value={r.name} onChange={(e) => set(i, { name: e.target.value })} aria-label="Stage name" />
-              <select className={inputClass} value={r.statusType} onChange={(e) => set(i, { statusType: e.target.value as StatusType })} aria-label="Status type">
+              <Input value={r.name} onChange={(e) => set(i, { name: e.target.value })} aria-label="Stage name" />
+              <NativeSelect value={r.statusType} onChange={(e) => set(i, { statusType: e.target.value as StatusType })} aria-label="Status type">
                 {STATUS_TYPES.map((s) => (
                   <option key={s} value={s}>
                     {STATUS_LABELS[s]}
                   </option>
                 ))}
-              </select>
-              <select className={inputClass} value={r.phase} onChange={(e) => set(i, { phase: e.target.value as Row['phase'] })} aria-label="Phase">
+              </NativeSelect>
+              <NativeSelect value={r.phase} onChange={(e) => set(i, { phase: e.target.value as Row['phase'] })} aria-label="Phase">
                 <option value="SETUP">Setup</option>
                 <option value="CYCLE">Monthly</option>
-              </select>
-              <input className={inputClass} inputMode="numeric" placeholder="SLA d" value={r.slaDays} onChange={(e) => set(i, { slaDays: e.target.value })} aria-label="SLA days" />
-              <input className={inputClass} placeholder="Checklist items; separated by ;" value={r.checklist} onChange={(e) => set(i, { checklist: e.target.value })} aria-label="Checklist" />
-              <button type="button" className="text-[13px] text-error" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>
+              </NativeSelect>
+              <Input inputMode="numeric" placeholder="SLA d" value={r.slaDays} onChange={(e) => set(i, { slaDays: e.target.value })} aria-label="SLA days" />
+              <Input placeholder="Checklist items; separated by ;" value={r.checklist} onChange={(e) => set(i, { checklist: e.target.value })} aria-label="Checklist" />
+              <Button variant="link" size="inline" className="text-error text-xs" type="button"  onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>
                 Remove
-              </button>
+              </Button>
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
