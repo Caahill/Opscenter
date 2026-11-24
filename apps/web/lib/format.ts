@@ -38,3 +38,15 @@ export function formatMoney(amount: string | null | undefined, currency: string)
   const grouped = new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
   return `${currency} ${grouped}`;
 }
+
+/** "1 project", "3 projects"; pass `pluralWord` when adding an "s" is wrong. */
+export function plural(count: number, word: string, pluralWord = `${word}s`): string {
+  return `${count} ${count === 1 ? word : pluralWord}`;
+}
+
+/** True when a dated task is past its due day (in IST) and not finished. */
+export function isOverdue(dueDate: string | null | undefined, status?: string | null, now = new Date()): boolean {
+  if (!dueDate || status === 'DONE' || status === 'STOPPED') return false;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+  return dueDate.slice(0, 10) < today;
+}

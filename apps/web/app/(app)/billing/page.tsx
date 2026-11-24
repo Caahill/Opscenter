@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { api } from '@/lib/api';
 import { AutoRefresh } from '@/lib/auto-refresh';
-import { formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney, plural } from '@/lib/format';
 import { RenewalActions } from './renewal-actions';
 
 const TONE: Record<BillingStatus, 'accent' | 'warning' | 'success' | 'muted'> = { REQUESTED: 'warning', INVOICED: 'accent', PAID: 'success', CANCELLED: 'muted' };
@@ -53,7 +53,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
                     {r.packageName ?? r.type} · PM {r.pmName} · ends {formatDate(r.endDate)}
                   </p>
                   <Chip tone={r.daysLeft <= 7 ? 'danger' : 'warning'} className="mt-1 px-2 py-0 text-[11px]">
-                    {r.daysLeft < 0 ? `${-r.daysLeft} days overdue` : r.daysLeft === 0 ? 'ends today' : `${r.daysLeft} days left`}
+                    {r.daysLeft < 0 ? `${plural(-r.daysLeft, 'day')} overdue` : r.daysLeft === 0 ? 'ends today' : `${plural(r.daysLeft, 'day')} left`}
                   </Chip>
                 </div>
                 {r.billingRequestId ? (
@@ -86,7 +86,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
                     <p className="font-mono text-[12px] text-muted">
                       Raised by {r.raisedByName} on {formatDate(r.createdAt)}
                       {r.taskCount ? ` · ${r.taskCount} ${r.taskCount === 1 ? 'task' : 'tasks'}` : ''}
-                      {r.messageCount ? ` · ${r.messageCount} messages` : ''}
+                      {r.messageCount ? ` · ${plural(r.messageCount, 'message')}` : ''}
                       {r.invoiceNo ? ` · ${r.invoiceNo}` : ''}
                     </p>
                   </div>

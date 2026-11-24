@@ -6,7 +6,7 @@ import { useState, type FormEvent } from 'react';
 import { CapacityWarning } from '@/lib/capacity-warning';
 import { PriorityChip, StatusChip } from '@/lib/chips';
 import { send, useAction } from '@/lib/client';
-import { formatDate } from '@/lib/format';
+import { formatDate, isOverdue, plural } from '@/lib/format';
 
 export function ProjectTasks({ project, users, canCreate }: { project: ProjectDetailView; users: UserView[]; canCreate: boolean }) {
   const { run, error, busy } = useAction();
@@ -49,10 +49,17 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
               </Link>
               <p className="text-[13px] text-muted">
                 {t.assigneeName ?? 'Unassigned'}
-                {t.dueDate ? ` · due ${formatDate(t.dueDate)}` : ''}
+                {t.dueDate ? (
+                  <span className={isOverdue(t.dueDate, t.statusType) ? 'font-medium text-error' : undefined}>
+                    {` · due ${formatDate(t.dueDate)}`}
+                    {isOverdue(t.dueDate, t.statusType) ? ' (overdue)' : ''}
+                  </span>
+                ) : (
+                  ''
+                )}
                 {t.estimateH ? ` · ${t.estimateH} h` : ''}
                 {t.cycleMonth ? ` · cycle ${t.cycleMonth}` : ''}
-                {t.subtaskCount ? ` · ${t.subtaskCount} subtasks` : ''}
+                {t.subtaskCount ? ` · ${plural(t.subtaskCount, 'subtask')}` : ''}
               </p>
             </div>
             <div className="flex items-center gap-1">

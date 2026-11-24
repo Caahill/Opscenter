@@ -3,6 +3,7 @@ import { Card, Chip, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { NewClientForm } from './new-client-form';
+import { plural } from '@/lib/format';
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ search?: string; market?: string }> }) {
   const q = await searchParams;
@@ -44,7 +45,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
               <div className="flex flex-wrap items-center gap-2">
                 {c.market ? <Chip>{c.market}</Chip> : null}
                 {c.status && c.status !== 'ACTIVE' ? <Chip tone="warning">{c.status}</Chip> : null}
-                <Chip tone="muted">{c.projectCount ?? 0} projects</Chip>
+                <Chip tone="muted">{plural(c.projectCount ?? 0, 'project')}</Chip>
                 <span className="text-[14px] text-muted">{c.pmName}</span>
               </div>
             </li>

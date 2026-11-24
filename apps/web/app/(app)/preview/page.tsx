@@ -2,7 +2,7 @@ import type { PolicyPreviewView } from '@opshub/shared';
 import { Card, Chip, Field, Label, Masked, PageHeader } from '@opshub/ui';
 import { notFound } from 'next/navigation';
 import { api, isDevAuth } from '@/lib/api';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatMoney } from '@/lib/format';
 
 export default async function PolicyPreviewPage() {
   if (!isDevAuth()) notFound();
@@ -35,7 +35,7 @@ export default async function PolicyPreviewPage() {
               <Masked value={p.client.website} />
             </Field>
             <Field label="Contract value">
-              <Masked value={p.client.contractValue ? `INR ${p.client.contractValue}` : p.client.contractValue} />
+              <Masked value={p.client.contractValue ? formatMoney(p.client.contractValue, 'INR') : p.client.contractValue} />
             </Field>
             <Field label="GSTIN">
               <Masked value={p.client.taxId} />
@@ -50,7 +50,7 @@ export default async function PolicyPreviewPage() {
               <Masked value={p.billingRequest.reason} />
             </Field>
             <Field label="Amount">
-              <Masked value={p.billingRequest.amount ? `${p.billingRequest.currency} ${p.billingRequest.amount}` : p.billingRequest.amount} />
+              <Masked value={p.billingRequest.amount ? formatMoney(p.billingRequest.amount, p.billingRequest.currency) : p.billingRequest.amount} />
             </Field>
           </dl>
         </Card>

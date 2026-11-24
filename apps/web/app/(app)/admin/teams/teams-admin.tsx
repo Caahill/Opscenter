@@ -4,6 +4,7 @@ import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { send } from '@/lib/client';
+import { plural } from '@/lib/format';
 
 export function TeamsAdmin({ teams, leaders }: { teams: TeamView[]; leaders: UserView[] }) {
   const router = useRouter();
@@ -50,7 +51,7 @@ export function TeamsAdmin({ teams, leaders }: { teams: TeamView[]; leaders: Use
           <Card key={t.id}>
             <div className="flex items-start justify-between gap-2">
               <p className="font-display text-[18px] font-[650] tracking-[-0.03em]">{t.name}</p>
-              <Chip tone="muted">{t.memberCount} members</Chip>
+              <Chip tone="muted">{plural(t.memberCount, 'member')}</Chip>
             </div>
             <p className="mt-1 font-mono text-[12px] text-muted">{DEPARTMENT_LABELS[t.department]}</p>
             <label className="mt-4 block text-[13px] text-muted" htmlFor={`leader-${t.id}`}>

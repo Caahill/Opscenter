@@ -4,6 +4,7 @@ import { Button, Card, Chip, inputClass } from '@opshub/ui';
 import { useState } from 'react';
 import { StatusChip } from '@/lib/chips';
 import { send, useAction } from '@/lib/client';
+import { plural } from '@/lib/format';
 
 interface Row {
   name: string;
@@ -61,7 +62,7 @@ export function PipelineEditor({ pipeline, title }: { pipeline: PipelineView; ti
         <div className="flex items-center gap-2">
           <h2 className="font-display text-[18px] font-[650]">{title}</h2>
           <Chip tone="muted">v{pipeline.version}</Chip>
-          <Chip tone="muted">{pipeline.projectCount} projects</Chip>
+          <Chip tone="muted">{plural(pipeline.projectCount, 'project')}</Chip>
         </div>
         {!editing ? (
           <Button variant="tertiary" onClick={() => setEditing(true)}>

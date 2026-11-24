@@ -12,7 +12,7 @@ import type {
 import { Card, Chip, Label, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, apiIfAllowed, isDevAuth } from '@/lib/api';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, plural } from '@/lib/format';
 import { MessageCard } from '../message-card';
 import { SimulateReply } from '../simulate-panel';
 import { LiveThread } from './live-thread';
@@ -64,7 +64,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ key: st
               <Chip tone="warning">Unmatched</Chip>
             )}
             <Chip tone="muted">{thread.channel === 'WHATSAPP' ? 'WhatsApp' : 'Email'}</Chip>
-            <span className="font-mono text-[12px] text-muted">{thread.messages.length} messages</span>
+            <span className="font-mono text-[12px] text-muted">{plural(thread.messages.length, 'message')}</span>
           </span>
         }
         actions={

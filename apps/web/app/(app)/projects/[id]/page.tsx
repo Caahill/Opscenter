@@ -3,7 +3,7 @@ import { Card, Chip, Field, Label, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, apiIfAllowed } from '@/lib/api';
 import { HealthChip, StatusChip } from '@/lib/chips';
-import { formatDate, formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { Attachments } from './attachments';
 import { BillingCard } from './billing-card';
 import { HandoffForm, StageChecklist, StageStepper, StatusControls } from './project-controls';
@@ -96,7 +96,7 @@ export default async function ProjectPage({ params, searchParams }: { params: Pr
               <Field label="End / renewal">{p.renewalDate ?? p.endDate ? formatDate((p.renewalDate ?? p.endDate)!) : 'None'}</Field>
               {p.cycleDay ? <Field label="Cycle day">{p.cycleDay} of each month</Field> : null}
               <Field label="Project value">
-                <Masked value={p.value === undefined ? undefined : p.value ? `INR ${p.value}` : null} />
+                <Masked value={p.value === undefined ? undefined : p.value ? formatMoney(p.value, 'INR') : null} />
               </Field>
             </dl>
           </Card>

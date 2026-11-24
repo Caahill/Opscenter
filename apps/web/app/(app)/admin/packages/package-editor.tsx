@@ -3,6 +3,7 @@ import { DEPARTMENT_LABELS, DEPARTMENTS, TASK_TYPE_LABELS, TASK_TYPES, type Depa
 import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
 import { useState } from 'react';
 import { send, useAction } from '@/lib/client';
+import { plural } from '@/lib/format';
 
 interface Row {
   title: string;
@@ -91,7 +92,7 @@ export function PackageEditor({ pkg, department, stages }: { pkg: PackageView; d
         <div>
           <p className="font-display text-[18px] font-[650]">{pkg.name}</p>
           <p className="font-mono text-[12px] text-muted">
-            {department} · {pkg.setupTasks.length} setup tasks · {pkg.cycleTasks.length} monthly tasks
+            {department} · {plural(pkg.setupTasks.length, 'setup task')} · {plural(pkg.cycleTasks.length, 'monthly task')}
             {pkg.monthlyHours ? ` · ${pkg.monthlyHours} h a month` : ''}
           </p>
         </div>

@@ -3,7 +3,7 @@ import { Card, Chip, Field, Label, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { HealthChip, PriorityChip, StatusChip } from '@/lib/chips';
-import { formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney, isOverdue } from '@/lib/format';
 import { AddContactForm, StartProjectForm } from './client-forms';
 import { CredentialsPanel } from './credentials-panel';
 import { ThreadRow } from '../../inbox/thread-row';
@@ -51,7 +51,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
                 <div className="flex flex-wrap items-center gap-1">
                   <StatusChip status={p.statusType} />
                   <HealthChip health={p.health} />
-                  {p.value ? <Chip tone="muted">INR {p.value}</Chip> : null}
+                  {p.value ? <Chip tone="muted">{formatMoney(p.value, 'INR')}</Chip> : null}
                 </div>
               </li>
             ))}
@@ -64,7 +64,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
           <Label>Client details</Label>
           <dl className="mt-3">
             <Field label="Contract value">
-              <Masked value={client.contractValue === undefined ? undefined : client.contractValue ? `INR ${client.contractValue}` : null} />
+              <Masked value={client.contractValue === undefined ? undefined : client.contractValue ? formatMoney(client.contractValue, 'INR') : null} />
             </Field>
             <Field label="GSTIN / tax id">
               <Masked value={client.taxId} />
@@ -119,7 +119,15 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
                 <span className="flex items-center gap-2 text-muted">
                   <PriorityChip priority={t.priority} />
                   {t.assigneeName ?? 'Unassigned'}
-                  {t.dueDate ? ` · ${formatDate(t.dueDate)}` : ''}
+                  {t.dueDate ? (
+                    isOverdue(t.dueDate) ? (
+                      <span className="font-medium text-error"> · Overdue since {formatDate(t.dueDate)}</span>
+                    ) : (
+                      ` · ${formatDate(t.dueDate)}`
+                    )
+                  ) : (
+                    ''
+                  )}
                 </span>
               </li>
             ))}
