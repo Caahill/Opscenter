@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@opshub/ui/tokens.css';
 @source '../../../packages/ui/src';
 
@@ -10,8 +11,22 @@ body {
 
 body {
   font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.375;
-  letter-spacing: -0.02em;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
+}
+
+/* shadcn: every border defaults to the theme border colour. */
+*,
+::before,
+::after {
+  border-color: var(--color-border);
+}
+
+/* shadcn focus ring on keyboard focus. */
+:where(a, button, [role='button'], summary):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
 }

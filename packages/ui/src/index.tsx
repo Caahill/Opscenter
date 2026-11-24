@@ -1,81 +1,115 @@
-// Components built to docs/DESIGN.md: ink-black primary actions, lavender secondary actions,
-// white rounded cards on the soft surface, mono labels for taxonomy.
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+// Ops Hub's shared components, built on shadcn/ui (neutral theme). The component names and props
+// that pages already use (Button variant="primary", Chip tone="accent", Card, Label...) are kept,
+// so every page picks up the shadcn look without changing its own code.
+import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
+import { cn } from './utils';
 
-const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
+export { cn } from './utils';
+export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger';
+// ---- Button (shadcn button) --------------------------------------------------------------
 
-const BUTTON: Record<ButtonVariant, string> = {
-  // button-primary: dark, darkens on hover rather than changing colour.
-  primary: 'bg-primary text-on-primary hover:bg-deep-panel rounded-xl px-[18px] py-3',
-  secondary: 'bg-surface-alt text-accent hover:text-accent-hover rounded-xl px-[18px] py-3',
-  tertiary: 'bg-canvas text-body border border-border hover:border-border-strong rounded-md px-3 py-2',
-  danger: 'bg-canvas text-error border border-border hover:border-error rounded-md px-3 py-2',
-};
+export const buttonVariants = cva(
+  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-on-primary shadow-card hover:bg-primary/90',
+        secondary: 'bg-surface-alt text-body shadow-card hover:bg-surface-alt/80',
+        outline: 'border border-border bg-canvas text-body shadow-card hover:bg-surface-alt',
+        ghost: 'text-body hover:bg-surface-alt',
+        destructive: 'border border-border bg-canvas text-error shadow-card hover:border-error/40 hover:bg-[#fef2f2]',
+        link: 'text-link underline-offset-4 hover:underline',
+        // Ops Hub's original names, mapped onto shadcn variants.
+        primary: 'bg-primary text-on-primary shadow-card hover:bg-primary/90',
+        tertiary: 'border border-border bg-canvas text-body shadow-card hover:bg-surface-alt',
+        danger: 'border border-border bg-canvas text-error shadow-card hover:border-error/40 hover:bg-[#fef2f2]',
+      },
+      size: {
+        default: 'min-h-9 px-4 py-2',
+        sm: 'min-h-8 gap-1.5 px-3 text-[13px]',
+        lg: 'min-h-10 px-6',
+        icon: 'size-9',
+      },
+    },
+    defaultVariants: { variant: 'default', size: 'default' },
+  },
+);
+
+type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
 
 export function Button({
   variant = 'primary',
+  size,
+  asChild = false,
   className,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
-  return (
-    <button
-      className={cx(
-        'inline-flex min-h-11 items-center justify-center gap-2 font-sans text-button font-extrabold tracking-[-0.01em] transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'tertiary' || variant === 'danger' ? 'min-h-9' : null,
-        BUTTON[variant],
-        className,
-      )}
-      {...props}
-    />
-  );
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: VariantProps<typeof buttonVariants>['size']; asChild?: boolean }) {
+  const Comp = asChild ? Slot : 'button';
+  // Outline-style buttons were the compact ones before; keep them small by default.
+  const s = size ?? (variant === 'tertiary' || variant === 'danger' ? 'sm' : 'default');
+  return <Comp className={cn(buttonVariants({ variant, size: s }), className)} {...props} />;
 }
 
-/** feature-card: one idea per card, white on surface, thin border, minimal shadow. */
+// ---- Card (shadcn card) ------------------------------------------------------------------
+
+/** shadcn card: white, thin border, small shadow. Padding is on the card; pass p-0 for flush lists. */
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cx('rounded-xl border border-border bg-canvas p-5 shadow-card', className)} {...props} />
-  );
+  return <div className={cn('rounded-xl border border-border bg-canvas p-5 text-body shadow-card', className)} {...props} />;
 }
+
+export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+  return <h3 className={cn('leading-none font-semibold', className)} {...props} />;
+}
+
+export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
+  return <p className={cn('text-sm text-muted', className)} {...props} />;
+}
+
+// ---- Badge (shadcn badge), still called Chip in pages ------------------------------------
 
 export type ChipTone = 'neutral' | 'accent' | 'success' | 'warning' | 'muted' | 'danger';
 
-/** app-chip: short label on a pale pill, for statuses, roles, departments and phase tags. */
-export function Chip({
-  tone = 'neutral',
-  className,
-  ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: ChipTone }) {
-  const tones = {
-    neutral: 'bg-surface text-body border border-border',
-    accent: 'bg-pale-purple text-accent-pressed',
-    success: 'bg-[#e6f6ee] text-[#1f6f49]',
-    warning: 'bg-pale-orange text-[#8a3a12]',
-    muted: 'bg-surface-alt text-muted',
-    danger: 'bg-[#fdecec] text-[#9b1c20]',
-  } as const;
-  return (
-    <span
-      className={cx('inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold tracking-normal', tones[tone], className)}
-      {...props}
-    />
-  );
-}
+export const badgeVariants = cva(
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium transition-colors [&_svg]:size-3',
+  {
+    variants: {
+      tone: {
+        neutral: 'border-border bg-canvas text-body',
+        accent: 'border-transparent bg-primary text-on-primary',
+        success: 'border-transparent bg-[#f0fdf4] text-[#15803d]',
+        warning: 'border-transparent bg-[#fffbeb] text-[#b45309]',
+        muted: 'border-transparent bg-surface-alt text-muted',
+        danger: 'border-transparent bg-[#fef2f2] text-[#b91c1c]',
+      },
+    },
+    defaultVariants: { tone: 'neutral' },
+  },
+);
 
-/** Small uppercase section label, used above groups of content. */
+/** Short label for statuses, roles, departments and tags (shadcn Badge). */
+export function Chip({ tone = 'neutral', className, ...props }: HTMLAttributes<HTMLSpanElement> & { tone?: ChipTone }) {
+  return <span className={cn(badgeVariants({ tone }), className)} {...props} />;
+}
+export const Badge = Chip;
+
+// ---- Text and layout ---------------------------------------------------------------------
+
+/** Card / section title. */
 export function Label({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx('text-[12px] font-semibold uppercase tracking-[0.06em] text-muted', className)} {...props} />;
+  return <p className={cn('text-sm font-semibold tracking-tight text-body', className)} {...props} />;
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="font-display text-title-sm font-[650] text-body">{title}</h1>
-        {description ? <p className="mt-1 max-w-2xl text-muted">{description}</p> : null}
+        <h1 className="text-2xl font-semibold tracking-tight text-body">{title}</h1>
+        {description ? <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p> : null}
       </div>
-      {actions ? <div className="flex gap-2">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>
   );
 }
@@ -89,7 +123,7 @@ const MASK_TOKEN = /^\[(?:email|phone|credential) hidden\]$/;
  */
 export function Masked({ value, multiline = false }: { value: unknown; multiline?: boolean }) {
   if (value === undefined) {
-    return <span className="rounded-sm bg-surface-alt px-1.5 py-0.5 font-mono text-[12px] text-muted">Hidden for your role</span>;
+    return <span className="rounded-md bg-surface-alt px-1.5 py-0.5 text-xs font-medium text-muted">Hidden for your role</span>;
   }
   if (value === null || value === '') return <span className="text-muted">None</span>;
   const text = String(value);
@@ -98,7 +132,7 @@ export function Masked({ value, multiline = false }: { value: unknown; multiline
     <span className={multiline ? 'whitespace-pre-wrap' : undefined}>
       {parts.map((part, i) =>
         MASK_TOKEN.test(part) ? (
-          <span key={i} className="rounded-sm bg-pale-purple px-1 font-mono text-[12px] text-accent-pressed">
+          <span key={i} className="rounded-md bg-surface-alt px-1 text-xs font-medium text-muted">
             {part}
           </span>
         ) : (
@@ -111,15 +145,33 @@ export function Masked({ value, multiline = false }: { value: unknown; multiline
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-surface-alt py-2 last:border-0">
-      <dt className="text-[14px] text-muted">{label}</dt>
-      <dd className="text-[15px] text-body">{children}</dd>
+    <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-border/60 py-2 last:border-0">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="text-sm text-body">{children}</dd>
     </div>
   );
 }
 
+// ---- Form controls (shadcn input) --------------------------------------------------------
+
+/** shadcn input look, for <input>, <select> and <textarea> elements that pages build themselves. */
 export const inputClass =
-  'w-full rounded-lg border border-border bg-canvas px-3 py-2 text-[15px] text-body outline-none focus:border-accent focus:ring-2 focus:ring-pale-purple';
+  'w-full min-h-9 rounded-md border border-border bg-canvas px-3 py-1.5 text-sm text-body shadow-card outline-none transition-[color,box-shadow] placeholder:text-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50';
+
+export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={cn(inputClass, className)} {...props} />;
+}
+
+export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea className={cn(inputClass, 'min-h-20', className)} {...props} />;
+}
+
+/** Visible form label (shadcn label). */
+export function FieldLabel({ className, ...props }: HTMLAttributes<HTMLLabelElement> & { htmlFor?: string }) {
+  return <label className={cn('text-sm leading-none font-medium text-body', className)} {...props} />;
+}
+
+// ---- Empty state -------------------------------------------------------------------------
 
 /**
  * A friendly "nothing here yet" block: what the list is for, and what to do next.
@@ -127,15 +179,15 @@ export const inputClass =
  */
 export function EmptyState({ title, hint, action, className }: { title: string; hint?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className={cx('flex flex-col items-center px-6 py-10 text-center', className)}>
-      <span aria-hidden className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-alt text-muted">
+    <div className={cn('flex flex-col items-center px-6 py-10 text-center', className)}>
+      <span aria-hidden className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-canvas text-muted shadow-card">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 13h4l2 3h4l2-3h4" />
           <path d="M5.5 6.5 4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5l-1.5-6.5A2 2 0 0 0 16.6 5H7.4a2 2 0 0 0-1.9 1.5Z" />
         </svg>
       </span>
-      <p className="font-semibold text-body">{title}</p>
-      {hint ? <p className="mt-1 max-w-md text-[14px] text-muted">{hint}</p> : null}
+      <p className="font-medium text-body">{title}</p>
+      {hint ? <p className="mt-1 max-w-md text-sm text-muted">{hint}</p> : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
