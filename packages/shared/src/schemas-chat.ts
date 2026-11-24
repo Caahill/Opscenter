@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const id = z.string().min(1).max(64);
 
-export const CHAT_KINDS = ['DIRECT', 'TEAM', 'PROJECT'] as const;
+export const CHAT_KINDS = ['DIRECT', 'TEAM', 'PROJECT', 'GROUP'] as const;
 export type ChatKind = (typeof CHAT_KINDS)[number];
 
 export const MENTION_TYPES = ['user', 'task', 'project', 'client'] as const;
@@ -29,6 +29,17 @@ export type ChatMessageInput = z.infer<typeof ChatMessageInput>;
 
 export const DirectChannelInput = z.object({ userId: id });
 export type DirectChannelInput = z.infer<typeof DirectChannelInput>;
+
+/** Group chats: a name and the colleagues to add (the creator is always a member). */
+const groupName = z.string().trim().min(1, 'give the group a name').max(60);
+export const CreateGroupInput = z.object({ name: groupName, memberIds: z.array(id).min(1, 'add at least one colleague').max(50) });
+export type CreateGroupInput = z.infer<typeof CreateGroupInput>;
+
+export const RenameGroupInput = z.object({ name: groupName });
+export type RenameGroupInput = z.infer<typeof RenameGroupInput>;
+
+export const GroupMembersInput = z.object({ userIds: z.array(id).min(1).max(50) });
+export type GroupMembersInput = z.infer<typeof GroupMembersInput>;
 
 export const ChatHistoryQuery = z.object({
   before: z.string().datetime({ offset: true }).optional(),

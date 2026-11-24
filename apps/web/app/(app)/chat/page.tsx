@@ -1,12 +1,14 @@
-import type { ChatChannelView, ChatKind, UserView } from '@opshub/shared';
+import { ROLE_LABELS, type ChatChannelView, type ChatKind, type UserView } from '@opshub/shared';
 import { Card, Label, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, getMe } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
+import { NewGroupDialog } from './group-dialogs';
 import { NewDirectMessage } from './new-direct';
 
 const GROUPS: Array<{ kind: ChatKind; title: string; empty: string }> = [
   { kind: 'DIRECT', title: 'Direct messages', empty: 'No direct messages yet.' },
+  { kind: 'GROUP', title: 'Groups', empty: 'No groups yet. Use “New group” to start one.' },
   { kind: 'PROJECT', title: 'Projects', empty: 'Project channels appear for projects you work on.' },
   { kind: 'TEAM', title: 'Teams', empty: 'You are not in a team.' },
 ];
@@ -14,10 +16,20 @@ const GROUPS: Array<{ kind: ChatKind; title: string; empty: string }> = [
 export default async function ChatPage() {
   const [me, channels, users] = await Promise.all([getMe(), api<ChatChannelView[]>('/chat/channels'), api<UserView[]>('/users')]);
   const colleagues = users.filter((u) => u.active && u.id !== me.id).map((u) => ({ id: u.id, name: u.name }));
+  const roleOf = (id: string) => users.find((u) => u.id === id)?.roles.map((r) => ROLE_LABELS[r]).join(', ');
   return (
     <>
-      <PageHeader title="Chat" description="Direct messages, your team and every project you work on. Clients are never in these channels." actions={<NewDirectMessage colleagues={colleagues} />} />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <PageHeader
+        title="Chat"
+        description="Direct messages, groups, your team and every project you work on. Clients are never in these channels."
+        actions={
+          <>
+            <NewGroupDialog colleagues={colleagues.map((c) => ({ ...c, hint: roleOf(c.id) }))} />
+            <NewDirectMessage colleagues={colleagues} />
+          </>
+        }
+      />
+      <div className="grid gap-4 md:grid-cols-2">
         {GROUPS.map((g) => {
           const list = channels.filter((c) => c.kind === g.kind);
           return (

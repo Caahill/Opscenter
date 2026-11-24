@@ -9,6 +9,7 @@ export const ChatChannelDto = defineDto('ChatChannel', {
   teamId: 'chatChannel.teamId',
   otherUserId: 'chatChannel.otherUserId',
   memberCount: 'chatChannel.memberCount',
+  memberIds: 'chatChannel.memberIds',
   unread: 'chatChannel.unread',
   lastMessageAt: 'chatChannel.lastMessageAt',
   lastMessagePreview: 'chatChannel.lastMessagePreview',

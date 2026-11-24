@@ -15,6 +15,8 @@ export interface ChatChannelView {
   /** DIRECT: the other person. */
   otherUserId: string | null;
   memberCount: number;
+  /** GROUP: who is in it (staff ids); null for other kinds. */
+  memberIds: string[] | null;
   unread: number;
   lastMessageAt: string | null;
   lastMessagePreview: string | null;

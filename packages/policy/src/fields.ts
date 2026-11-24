@@ -525,6 +525,7 @@ export const FIELD_POLICY = {
   'chatChannel.teamId': PUBLIC,
   'chatChannel.otherUserId': PUBLIC,
   'chatChannel.memberCount': PUBLIC,
+  'chatChannel.memberIds': PUBLIC,
   'chatChannel.unread': PUBLIC,
   'chatChannel.lastMessageAt': PUBLIC,
   'chatChannel.lastMessagePreview': PUBLIC,

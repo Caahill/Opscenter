@@ -1,5 +1,5 @@
-// Internal chat (PRD 5.1, 5.2, 5.5): direct messages, a channel per team and an automatic channel
-// per project. Members are SySpree staff only; clients never are. Access is membership, whatever the
+// Internal chat (PRD 5.1, 5.2, 5.5): direct messages, group chats people make themselves, a channel
+// per team and an automatic channel per project. Members are SySpree staff only; clients never are. Access is membership, whatever the
 // role: Admin does not read other people's direct messages. Mentions are re-resolved for each
 // reader with their own permissions, so a link never shows what the reader could not open.
 import { Injectable } from '@nestjs/common';
@@ -54,14 +54,14 @@ export class ChatService {
   }
 
   private async canOpen(v: AuthedViewer, c: ChatChannel): Promise<boolean> {
-    if (c.kind === 'DIRECT') return Boolean(await this.prisma.chatMember.findUnique({ where: { channelId_userId: { channelId: c.id, userId: v.userId } } }));
+    if (c.kind === 'DIRECT' || c.kind === 'GROUP') return Boolean(await this.prisma.chatMember.findUnique({ where: { channelId_userId: { channelId: c.id, userId: v.userId } } }));
     if (c.kind === 'TEAM') return (await this.scopes.teamIds(v)).includes(c.teamId!);
     return Boolean(await this.prisma.project.findFirst({ where: { AND: [{ id: c.projectId! }, await this.projectWhere(v)] }, select: { id: true } }));
   }
 
   /** Everyone in a channel now: who gets the live message and who may be mentioned. */
   async members(c: ChatChannel): Promise<string[]> {
-    if (c.kind === 'DIRECT') return (await this.prisma.chatMember.findMany({ where: { channelId: c.id } })).map((m) => m.userId);
+    if (c.kind === 'DIRECT' || c.kind === 'GROUP') return (await this.prisma.chatMember.findMany({ where: { channelId: c.id } })).map((m) => m.userId);
     if (c.kind === 'TEAM') {
       const team = await this.prisma.team.findUnique({ where: { id: c.teamId! } });
       const users = await this.prisma.user.findMany({ where: { teamId: c.teamId!, active: true }, select: { id: true } });
@@ -87,7 +87,7 @@ export class ChatService {
   async channels(v: AuthedViewer): Promise<Presentable[]> {
     const { teamIds, projectIds } = await this.ensureChannels(v);
     const rows = await this.prisma.chatChannel.findMany({
-      where: { OR: [{ teamId: { in: teamIds } }, { projectId: { in: projectIds } }, { kind: 'DIRECT', readers: { some: { userId: v.userId } } }] },
+      where: { OR: [{ teamId: { in: teamIds } }, { projectId: { in: projectIds } }, { kind: { in: ['DIRECT', 'GROUP'] }, readers: { some: { userId: v.userId } } }] },
     });
     return Promise.all(rows.map((c) => this.presentChannel(v, c))).then((list) =>
       list.sort((a, b) => String((b.data as { lastMessageAt: Date | null }).lastMessageAt ?? '').localeCompare(String((a.data as { lastMessageAt: Date | null }).lastMessageAt ?? ''))),
@@ -112,6 +112,7 @@ export class ChatService {
       teamId: c.teamId,
       otherUserId: other,
       memberCount: members.length,
+      memberIds: c.kind === 'GROUP' ? members : null,
       unread,
       lastMessageAt: last?.createdAt ?? null,
       lastMessagePreview: last ? `${names.get(last.authorId) ?? 'Someone'}: ${preview(last.body).slice(0, 80)}` : null,
@@ -126,6 +127,70 @@ export class ChatService {
     const channel = await this.prisma.chatChannel.upsert({ where: { directKey }, update: {}, create: { kind: 'DIRECT', directKey } });
     await this.prisma.chatMember.createMany({ data: [{ channelId: channel.id, userId: v.userId }, { channelId: channel.id, userId }], skipDuplicates: true });
     return this.presentChannel(v, channel);
+  }
+
+  // ---- Groups ----
+
+  /** Only active colleagues can be added to a group. */
+  private async activeUserIds(ids: string[]): Promise<string[]> {
+    const unique = [...new Set(ids)];
+    const found = await this.prisma.user.findMany({ where: { id: { in: unique }, active: true }, select: { id: true } });
+    if (found.length !== unique.length) throw Errors.validation('memberIds: every member must be an active colleague');
+    return unique;
+  }
+
+  private async requireGroup(v: AuthedViewer, channelId: string): Promise<ChatChannel> {
+    const c = await this.require(v, channelId);
+    if (c.kind !== 'GROUP') throw Errors.validation('Only group chats can be changed this way');
+    return c;
+  }
+
+  /** A group chat: the creator plus the colleagues they pick. Membership alone decides access. */
+  async createGroup(v: AuthedViewer, name: string, memberIds: string[]) {
+    const others = await this.activeUserIds(memberIds.filter((id) => id !== v.userId));
+    if (others.length === 0) throw Errors.validation('memberIds: add at least one colleague');
+    const channel = await this.prisma.chatChannel.create({ data: { kind: 'GROUP', name } });
+    await this.prisma.chatMember.createMany({ data: [v.userId, ...others].map((userId) => ({ channelId: channel.id, userId, ...(userId === v.userId ? { lastReadAt: new Date() } : {}) })) });
+    await this.announce(v, channel, `created the group "${name}"`, others);
+    return this.presentChannel(v, channel);
+  }
+
+  async renameGroup(v: AuthedViewer, channelId: string, name: string) {
+    const c = await this.requireGroup(v, channelId);
+    const renamed = await this.prisma.chatChannel.update({ where: { id: c.id }, data: { name } });
+    await this.announce(v, renamed, `renamed the group to "${name}"`);
+    return this.presentChannel(v, renamed);
+  }
+
+  async addMembers(v: AuthedViewer, channelId: string, userIds: string[]) {
+    const c = await this.requireGroup(v, channelId);
+    const current = new Set(await this.members(c));
+    const added = (await this.activeUserIds(userIds)).filter((id) => !current.has(id));
+    if (added.length) {
+      await this.prisma.chatMember.createMany({ data: added.map((userId) => ({ channelId: c.id, userId })), skipDuplicates: true });
+      const names = await this.directory.names(added);
+      await this.announce(v, c, `added ${added.map((id) => names.get(id) ?? 'a colleague').join(', ')}`, added);
+    }
+    return this.presentChannel(v, c);
+  }
+
+  /** Leaving removes the person's membership; they no longer see the group or its messages. */
+  async leaveGroup(v: AuthedViewer, channelId: string) {
+    const c = await this.requireGroup(v, channelId);
+    await this.announce(v, c, 'left the group');
+    await this.prisma.chatMember.delete({ where: { channelId_userId: { channelId: c.id, userId: v.userId } } });
+  }
+
+  /** A short line in the group from the person who made the change, sent live to every member. */
+  private async announce(v: AuthedViewer, c: ChatChannel, text: string, notifyIds: string[] = []) {
+    const msg = await this.prisma.chatMessage.create({ data: { channelId: c.id, authorId: v.userId, body: `_${text}_`, mentions: [] as unknown as Prisma.InputJsonValue } });
+    if (notifyIds.length) {
+      const author = (await this.directory.names([v.userId])).get(v.userId) ?? 'Someone';
+      await this.notify.notify(notifyIds, { kind: 'MENTION', title: `${author} added you to "${c.name ?? 'a group'}"`, body: 'Open the chat to say hello.', link: `/chat/${c.id}` }, v.userId);
+    }
+    for (const userId of await this.members(c)) {
+      await this.realtime.emitTo(userId, 'chat.message_new', async (viewer) => (await this.presentMessages(viewer, [msg]))[0]!);
+    }
   }
 
   // ---- Messages ----
@@ -195,7 +260,7 @@ export class ChatService {
     await this.markRead(v, channelId);
     const members = await this.members(c);
     const author = (await this.directory.names([v.userId])).get(v.userId) ?? 'Someone';
-    const where = c.kind === 'DIRECT' ? 'a direct message' : (c.name ?? 'chat');
+    const where = c.kind === 'DIRECT' ? 'a direct message' : c.kind === 'GROUP' ? `the group "${c.name ?? ''}"` : (c.name ?? 'chat');
     // Mentioned members are told; the text stays in the chat, where their own permissions apply.
     const mentioned = mentions.filter((m) => m.type === 'user' && members.includes(m.id)).map((m) => m.id);
     await this.notify.notify(mentioned, { kind: 'MENTION', title: `${author} mentioned you in ${where}`, body: 'Open the chat to reply.', link: `/chat/${c.id}` }, v.userId);

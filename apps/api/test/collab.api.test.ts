@@ -185,6 +185,55 @@ describe('PRD 5.1 direct messages', () => {
   });
 });
 
+describe('group chats', () => {
+  it('only members can open a group, Admin included; members can add people, rename and leave', async () => {
+    const made = await req('post', emails.ana, '/api/v1/chat/groups', { name: `Diwali push ${RUN}`, memberIds: [crew.ben, crew.ana] });
+    expect(made.status, JSON.stringify(made.body)).toBe(201);
+    expect(made.body).toMatchObject({ kind: 'GROUP', name: `Diwali push ${RUN}`, memberCount: 2 });
+    expect([...made.body.memberIds].sort()).toEqual([crew.ana, crew.ben].sort());
+    const id = made.body.id as string;
+
+    // Ben sees it in his list and can post; outsiders, the team lead and Admin cannot open it.
+    const benList = await req('get', emails.ben, '/api/v1/chat/channels');
+    expect(benList.body.some((c: { id: string }) => c.id === id)).toBe(true);
+    expect((await req('post', emails.ben, `/api/v1/chat/channels/${id}/messages`, { body: 'Banner draft is ready' })).status).toBe(201);
+    for (const email of [AS.ADMIN, emails.lead, emails.outsider]) {
+      expect((await req('get', email, `/api/v1/chat/channels/${id}/messages`)).status, email).toBe(404);
+      expect((await req('post', email, `/api/v1/chat/channels/${id}/messages`, { body: 'let me in' })).status, email).toBe(404);
+      expect((await req('post', email, `/api/v1/chat/channels/${id}/members`, { userIds: [crew.outsider] })).status, email).toBe(404);
+      expect((await req('get', email, '/api/v1/chat/channels')).body.some((c: { id: string }) => c.id === id), email).toBe(false);
+    }
+
+    // A member adds the outsider, who can then read the history.
+    const added = await req('post', emails.ben, `/api/v1/chat/channels/${id}/members`, { userIds: [crew.outsider] });
+    expect(added.status, JSON.stringify(added.body)).toBe(201);
+    expect(added.body.memberCount).toBe(3);
+    const history = await req('get', emails.outsider, `/api/v1/chat/channels/${id}/messages`);
+    expect(history.status).toBe(200);
+    expect(history.body.messages.map((m: { body: string }) => m.body)).toContain('Banner draft is ready');
+
+    // Rename, then leave: a member who leaves can no longer open the group.
+    const renamed = await ctx.http().patch(`/api/v1/chat/channels/${id}`).set('Cookie', await ctx.cookieFor(emails.ana)).send({ name: `Diwali launch ${RUN}` });
+    expect(renamed.status, JSON.stringify(renamed.body)).toBe(200);
+    expect(renamed.body.name).toBe(`Diwali launch ${RUN}`);
+    expect((await req('delete', emails.outsider, `/api/v1/chat/channels/${id}/members/me`)).status).toBe(200);
+    expect((await req('get', emails.outsider, `/api/v1/chat/channels/${id}/messages`)).status).toBe(404);
+
+    // Pasted client details are hidden in groups too.
+    const masked = await req('post', emails.ana, `/api/v1/chat/channels/${id}/messages`, { body: 'Client said call 98200 55555' });
+    expect(masked.body.body).toContain('[phone hidden]');
+  });
+
+  it('rejects a group with nobody else, or with an unknown person, and cannot rename other chat kinds', async () => {
+    expect((await req('post', emails.ana, '/api/v1/chat/groups', { name: 'Just me', memberIds: [crew.ana] })).status).toBe(400);
+    expect((await req('post', emails.ana, '/api/v1/chat/groups', { name: 'Ghosts', memberIds: ['nobody-here'] })).status).toBe(400);
+    expect((await req('post', emails.ana, '/api/v1/chat/groups', { name: '   ', memberIds: [crew.ben] })).status).toBe(400);
+    const dm = await req('post', emails.ana, '/api/v1/chat/direct', { userId: crew.ben });
+    const rename = await ctx.http().patch(`/api/v1/chat/channels/${dm.body.id}`).set('Cookie', await ctx.cookieFor(emails.ana)).send({ name: 'Renamed' });
+    expect(rename.status).toBe(400);
+  });
+});
+
 describe('PRD 5.3 notifications and settings', () => {
   it('shows defaults, saves choices per category, and keeps them per person', async () => {
     const res = await req('get', emails.ana, '/api/v1/notifications/settings');

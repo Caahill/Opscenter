@@ -158,7 +158,13 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
         ) : null}
         {messages.length === 0 ? <p className="py-8 text-center text-muted">No messages yet. Say hello.</p> : null}
         <ul className="space-y-4">
-          {messages.map((m) => (
+          {messages.map((m) =>
+            /^_[^_\n]+_$/.test(m.body) ? (
+              // Group events ("created the group", "added Sana") read as a quiet line, not a message.
+              <li key={m.id} data-testid="chat-message" className="text-center text-xs text-muted">
+                {m.authorId === meId ? 'You' : (m.authorName ?? 'Someone')} {m.body.slice(1, -1)} · {formatDateTime(m.createdAt, timezone)}
+              </li>
+            ) : (
             <li key={m.id} data-testid="chat-message">
               <p className="text-[13px]">
                 <span className="font-semibold">{m.authorId === meId ? 'You' : (m.authorName ?? 'Someone')}</span>
@@ -166,7 +172,8 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
               </p>
               <MessageBody m={m} />
             </li>
-          ))}
+            ),
+          )}
         </ul>
         <div ref={end} />
       </div>
