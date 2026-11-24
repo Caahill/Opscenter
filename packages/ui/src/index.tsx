@@ -33,6 +33,17 @@ export {
   ConfirmButton,
   useConfirm,
 } from './controls';
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Tooltip,
+  TooltipProvider,
+} from './menu';
 export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 
 // ---- Button (shadcn button) --------------------------------------------------------------

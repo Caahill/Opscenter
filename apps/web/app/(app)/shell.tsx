@@ -1,6 +1,19 @@
 'use client';
 import { ROLE_LABELS, type MeView, type NotificationView } from '@opshub/shared';
-import { Button, buttonVariants, Chip } from '@opshub/ui';
+import {
+  Button,
+  buttonVariants,
+  Chip,
+  cn,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Tooltip,
+  TooltipProvider,
+} from '@opshub/ui';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -156,13 +169,15 @@ export function Shell({ me, devAuth, unread, chatUnread, children }: { me: MeVie
       <div className="min-w-0">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-canvas/95 px-4 py-3 backdrop-blur lg:px-8">
           <Button
-            variant="outline"
+            variant="ghost"
+            size="icon"
             type="button"
-            className="lg:hidden"
+            className="rounded-full lg:hidden"
             onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}>
-            <Icon name="menu" />
-            Menu
+            aria-expanded={open}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            <Icon name="menu" size={19} />
           </Button>
           <div className="hidden lg:block" />
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -171,38 +186,67 @@ export function Shell({ me, devAuth, unread, chatUnread, children }: { me: MeVie
                 Demo
               </Chip>
             ) : null}
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span
-                aria-hidden
-                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pale-purple text-[13px] font-bold text-accent-pressed sm:flex"
-              >
-                {initials(me.name)}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-[14.5px] font-semibold leading-tight">{me.name}</p>
-                <p className="truncate text-[12px] text-muted">
-                  {me.roles.map((r) => ROLE_LABELS[r]).join(' + ')}
-                  {me.teamName ? ` · ${me.teamName}` : ''}
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/notifications"
-              aria-label={unread ? `Alerts, ${unread} unread` : 'Alerts'}
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              <Icon name="bell" />
-              <span className="hidden sm:inline">Alerts</span>
-              {unread ? <span className="rounded-full bg-accent px-2 text-[12px] font-semibold text-on-primary">{unread}</span> : null}
-            </Link>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={logout}
-              aria-label="Sign out">
-              <Icon name="logout" />
-              <span className="hidden sm:inline">Sign out</span>
-            </Button>
+            <TooltipProvider>
+              <Tooltip label={unread ? `Alerts (${unread} unread)` : 'Alerts'}>
+                <Link
+                  href="/notifications"
+                  aria-label={unread ? `Alerts, ${unread} unread` : 'Alerts'}
+                  className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'relative rounded-full')}
+                >
+                  <Icon name="bell" size={19} />
+                  {unread ? (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-error px-1 text-[10.5px] font-semibold text-white ring-2 ring-canvas">
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  ) : null}
+                </Link>
+              </Tooltip>
+
+              <DropdownMenu>
+                <Tooltip label={me.name}>
+                  <DropdownMenuTrigger
+                    aria-label={`Your profile: ${me.name}`}
+                    className="flex size-9 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-on-primary outline-none ring-offset-2 ring-offset-canvas hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:ring-2 data-[state=open]:ring-ring"
+                  >
+                    {initials(me.name)}
+                  </DropdownMenuTrigger>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-60">
+                  <DropdownMenuLabel className="flex items-center gap-3">
+                    <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-alt text-[13px] font-semibold">
+                      {initials(me.name)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{me.name}</span>
+                      <span className="block truncate text-xs font-normal text-muted">
+                        {me.roles.map((r) => ROLE_LABELS[r]).join(' + ')}
+                        {me.teamName ? ` · ${me.teamName}` : ''}
+                      </span>
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => router.push('/settings/notifications')}>
+                    <Icon name="settings" size={16} />
+                    Notification settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => router.push('/help')}>
+                    <Icon name="help" size={16} />
+                    Help and tips
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem destructive onSelect={() => void logout()}>
+                    <Icon name="logout" size={16} />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Tooltip label="Sign out">
+                <Button variant="ghost" size="icon" type="button" onClick={logout} aria-label="Sign out" className="rounded-full">
+                  <Icon name="logout" size={19} />
+                </Button>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </header>
         {open ? <div className="border-b border-border bg-canvas px-3 py-4 lg:hidden">{nav}</div> : null}
