@@ -1,5 +1,5 @@
 import { LEAVE_KIND_LABELS, todayIn, DEFAULT_TIMEZONE, type HolidayView, type LeaveView, type UserView } from '@opshub/shared';
-import { Card, EmptyState, Label, Masked, PageHeader } from '@opshub/ui';
+import { Card, Chip, EmptyState, Label, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, getMe } from '@/lib/api';
 import { formatDay, formatLeave } from '@/lib/format';
@@ -20,6 +20,10 @@ export default async function LeavePage({ searchParams }: { searchParams: Promis
     manage ? api<UserView[]>('/users') : Promise.resolve([] as UserView[]),
   ]);
   const showReason = leave.some((l) => 'reason' in l || 'kind' in l);
+  const today = todayIn(DEFAULT_TIMEZONE);
+  const upcoming = holidays.filter((h) => h.date.slice(0, 10) >= today);
+  const next = upcoming[0];
+  const daysUntil = (date: string) => Math.round((Date.parse(`${date.slice(0, 10)}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
 
   return (
     <>
@@ -74,38 +78,80 @@ export default async function LeavePage({ searchParams }: { searchParams: Promis
               <LeaveForm users={users.filter((u) => u.active)} />
             </Card>
           ) : null}
-          <Card>
-            <div className="flex items-center justify-between gap-2">
-              <Label>Office holidays {year}</Label>
-              <span className="flex gap-1 text-[13px]">
+          <Card className="p-0">
+            <div className="flex items-start justify-between gap-3 px-5 pt-5">
+              <div>
+                <Label>Office holidays</Label>
+                <p className="mt-1 text-xs text-muted">
+                  {holidays.length === 0
+                    ? 'None recorded yet'
+                    : `${holidays.length} ${holidays.length === 1 ? 'holiday' : 'holidays'}${upcoming.length && year === thisYear ? ` · ${upcoming.length} still to come` : ''}`}
+                </p>
+              </div>
+              {/* shadcn-style segmented control for the year */}
+              <nav aria-label="Holiday year" className="flex rounded-lg bg-surface-alt p-0.5 text-[13px]">
                 {[thisYear, thisYear + 1].map((y) => (
                   <Link
                     key={y}
                     href={y === thisYear ? '/leave' : `/leave?year=${y}`}
                     aria-current={y === year ? 'true' : undefined}
-                    className={`rounded-md px-2 py-0.5 ${y === year ? 'bg-pale-purple font-semibold text-accent-pressed' : 'text-muted hover:text-body'}`}
+                    className={`rounded-md px-2.5 py-1 font-medium transition-colors ${y === year ? 'bg-canvas text-body shadow-card' : 'text-muted hover:text-body'}`}
                   >
                     {y}
                   </Link>
                 ))}
-              </span>
+              </nav>
             </div>
-            <ul className="mt-3 space-y-1 text-[14px]">
-              {holidays.map((h) => (
-                <li key={h.id} className="flex items-center justify-between gap-2">
-                  <span>
-                    {formatDay(h.date)} · {h.name} <span className="font-mono text-[12px] text-muted">{h.location}</span>
-                  </span>
-                  {holidaysManage ? <RemoveHoliday id={h.id} name={h.name} /> : null}
+
+            {next ? (
+              <div className="mx-5 mt-4 flex items-center gap-3 rounded-lg bg-primary px-3 py-2.5 text-on-primary">
+                <span className="text-xs font-medium uppercase tracking-wide opacity-70">Next</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{next.name}</span>
+                <span className="text-xs opacity-80">
+                  {formatDay(next.date)} · {daysUntil(next.date) === 0 ? 'today' : daysUntil(next.date) === 1 ? 'tomorrow' : `in ${daysUntil(next.date)} days`}
+                </span>
+              </div>
+            ) : null}
+
+            <ul className="mt-3 px-2 pb-2">
+              {holidays.map((h) => {
+                const day = h.date.slice(0, 10);
+                const past = day < today;
+                const d = new Date(`${day}T00:00:00Z`);
+                return (
+                  <li key={h.id} className={`group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-surface ${past ? 'opacity-55' : ''}`}>
+                    <span
+                      aria-hidden
+                      className={`flex w-11 shrink-0 flex-col items-center rounded-md border py-1 leading-none ${next?.id === h.id ? 'border-primary bg-primary text-on-primary' : 'border-border bg-canvas'}`}
+                    >
+                      <span className={`text-[10px] font-medium uppercase ${next?.id === h.id ? 'opacity-80' : 'text-muted'}`}>
+                        {d.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' })}
+                      </span>
+                      <span className="mt-0.5 text-[15px] font-semibold tabular-nums">{d.getUTCDate()}</span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{h.name}</span>
+                      <span className="block text-xs text-muted">
+                        {d.toLocaleString('en-GB', { weekday: 'long', timeZone: 'UTC' })}
+                        {past ? ' · passed' : ''}
+                      </span>
+                    </span>
+                    {h.location !== 'IN' ? <Chip tone="muted">{h.location}</Chip> : null}
+                    {holidaysManage ? <RemoveHoliday id={h.id} name={h.name} /> : null}
+                  </li>
+                );
+              })}
+              {holidays.length === 0 ? (
+                <li>
+                  <EmptyState title={`No holidays for ${year} yet`} hint="Add them one by one below, or paste the whole list from HR." className="py-6" />
                 </li>
-              ))}
-              {holidays.length === 0 ? <li className="text-muted">No holidays recorded for {year} yet.</li> : null}
+              ) : null}
             </ul>
             {holidaysManage ? (
-              <>
+              <div className="border-t border-border px-5 pt-1 pb-5">
                 <HolidayForm />
                 <BulkHolidayForm existing={holidays} />
-              </>
+              </div>
             ) : null}
           </Card>
         </div>

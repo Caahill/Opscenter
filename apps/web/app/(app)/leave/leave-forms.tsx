@@ -140,15 +140,16 @@ export function HolidayForm() {
     if (ok) setForm({ date: '', name: '', location: form.location });
   }
   return (
-    <form onSubmit={save} className="mt-4 grid gap-2 border-t border-surface-alt pt-4">
-      <div className="grid grid-cols-[1fr_72px] gap-2">
-        <Input type="date" required aria-label="Holiday date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        <Input required aria-label="Location" maxLength={2} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value.toUpperCase() })} />
-      </div>
+    <form onSubmit={save} className="mt-4 grid gap-2" aria-label="Add a holiday">
+      <p className="text-sm font-medium">Add a holiday</p>
       <Input required placeholder="Holiday name, e.g. Diwali" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-      <Button type="submit" variant="secondary" disabled={busy}>
-        Add holiday
-      </Button>
+      <div className="grid grid-cols-[1fr_64px_auto] gap-2">
+        <Input type="date" required aria-label="Holiday date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        <Input required aria-label="Location" title="Country code, e.g. IN" maxLength={2} className="text-center uppercase" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value.toUpperCase() })} />
+        <Button type="submit" disabled={busy}>
+          Add
+        </Button>
+      </div>
       {error ? <p className="text-[14px] text-error">{error}</p> : null}
     </form>
   );
@@ -158,10 +159,14 @@ export function RemoveHoliday({ id, name }: { id: string; name: string }) {
   const { run, busy } = useAction();
   return (
     <ConfirmButton
-      className={cn(buttonVariants({ variant: 'link', size: 'inline' }), 'text-xs text-error')}
+      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-8 text-muted opacity-60 hover:bg-[#fef2f2] hover:text-error group-hover:opacity-100 focus-visible:opacity-100')}
       disabled={busy}
       aria-label={`Remove ${name}`}
-      trigger="Remove"
+      trigger={
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+        </svg>
+      }
       title={`Remove ${name}?`}
       description="Capacity for that day goes back to normal working hours."
       confirmLabel="Remove holiday"
@@ -222,8 +227,8 @@ export function BulkHolidayForm({ existing }: { existing: Array<{ date: string; 
   }
 
   return (
-    <Collapsible className="mt-4 border-t border-surface-alt pt-4">
-      <CollapsibleTrigger className="text-[14px] font-semibold text-body hover:underline">Paste a full holiday list</CollapsibleTrigger>
+    <Collapsible className="mt-3">
+      <CollapsibleTrigger className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}>Paste a full holiday list</CollapsibleTrigger>
       <CollapsibleContent>
       <form onSubmit={save} className="mt-3 grid gap-2">
         <p className="text-[13px] text-muted">One holiday per line, for example “2026-11-08 Diwali” or “25/12/2026, Christmas”.</p>
