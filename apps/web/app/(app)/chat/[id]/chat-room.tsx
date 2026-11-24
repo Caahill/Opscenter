@@ -10,8 +10,32 @@ import { getJson, send } from '@/lib/client';
 import { formatDateTime } from '@/lib/format';
 import { useRealtime } from '@/lib/realtime';
 
+/** Group events are stored as "_text_" (see chat.service announce). */
+const isEvent = (body: string) => /^_[^_\n]+_$/.test(body);
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('');
+
+const dayKey = (iso: string, timeZone: string) => new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(iso));
+const timeOf = (iso: string, timeZone: string) => new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone }).format(new Date(iso));
+
+/** "Today", "Yesterday" or "Mon 23 Nov 2026", for the line between days. */
+function dayLabel(iso: string, timeZone: string): string {
+  const key = dayKey(iso, timeZone);
+  const today = dayKey(new Date().toISOString(), timeZone);
+  const yesterday = dayKey(new Date(Date.now() - 86_400_000).toISOString(), timeZone);
+  if (key === today) return 'Today';
+  if (key === yesterday) return 'Yesterday';
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone }).format(new Date(iso));
+}
+
 /** Message text with its mention tokens as links (or "no access" where the reader has none). */
-export function MessageBody({ m }: { m: ChatMessageView }) {
+export function MessageBody({ m, mine = false }: { m: ChatMessageView; mine?: boolean }) {
   const parts: ReactNode[] = [];
   let at = 0;
   for (const match of m.body.matchAll(new RegExp(MENTION_TOKEN.source, 'g'))) {
@@ -20,13 +44,13 @@ export function MessageBody({ m }: { m: ChatMessageView }) {
     const mention = m.mentions.find((x) => x.type === type && x.id === id);
     if (!mention?.label) {
       parts.push(
-        <span key={match.index} className="rounded bg-surface-alt px-1 text-muted" title="You cannot open this record">
+        <span key={match.index} className={`rounded px-1 ${mine ? 'bg-white/15 text-on-primary/80' : 'bg-canvas text-muted'}`} title="You cannot open this record">
           {sigil}no access
         </span>,
       );
     } else if (mention.href) {
       parts.push(
-        <Link key={match.index} href={mention.href} className="font-semibold text-link">
+        <Link key={match.index} href={mention.href} className={`font-semibold underline-offset-2 hover:underline ${mine ? 'text-on-primary underline' : 'text-link'}`}>
           {sigil}
           {label}
         </Link>,
@@ -106,15 +130,20 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
     let body = text.trim();
     if (!body) return;
     for (const p of picked) body = body.replace(p.shown, p.token);
+    // Clear the box straight away, so the next message can be typed while this one is sending.
+    const draft = { text, picked };
+    setText('');
+    setPicked([]);
     setBusy(true);
     setError(null);
     try {
       const m = await send<ChatMessageView>('POST', `/chat/channels/${channelId}/messages`, { body });
       setMessages((list) => (list.some((x) => x.id === m.id) ? list : [...list, m]));
-      setText('');
-      setPicked([]);
       setTimeout(() => end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 50);
     } catch (e) {
+      // Not sent: put the text back (unless something new was typed meanwhile) and say why.
+      setText((now) => (now ? now : draft.text));
+      setPicked((now) => (now.length ? now : draft.picked));
       setError(e instanceof Error ? e.message : 'Could not send');
     } finally {
       setBusy(false);
@@ -157,23 +186,67 @@ export function ChatRoom({ initial, meId, timezone }: { initial: ChatHistoryView
           </Button>
         ) : null}
         {messages.length === 0 ? <p className="py-8 text-center text-muted">No messages yet. Say hello.</p> : null}
-        <ul className="space-y-4">
-          {messages.map((m) =>
-            /^_[^_\n]+_$/.test(m.body) ? (
-              // Group events ("created the group", "added Sana") read as a quiet line, not a message.
-              <li key={m.id} data-testid="chat-message" className="text-center text-xs text-muted">
-                {m.authorId === meId ? 'You' : (m.authorName ?? 'Someone')} {m.body.slice(1, -1)} · {formatDateTime(m.createdAt, timezone)}
+        <ul className="flex flex-col gap-1">
+          {messages.map((m, i) => {
+            const prev = messages[i - 1];
+            const day = dayKey(m.createdAt, timezone);
+            const newDay = !prev || dayKey(prev.createdAt, timezone) !== day;
+            const separator = newDay ? (
+              <li key={`day-${m.id}`} aria-hidden className="my-3 flex items-center gap-3 text-xs text-muted">
+                <span className="h-px flex-1 bg-border" />
+                {dayLabel(m.createdAt, timezone)}
+                <span className="h-px flex-1 bg-border" />
               </li>
-            ) : (
-            <li key={m.id} data-testid="chat-message">
-              <p className="text-[13px]">
-                <span className="font-semibold">{m.authorId === meId ? 'You' : (m.authorName ?? 'Someone')}</span>
-                <span className="ml-2 font-mono text-[12px] text-muted">{formatDateTime(m.createdAt, timezone)}</span>
-              </p>
-              <MessageBody m={m} />
-            </li>
-            ),
-          )}
+            ) : null;
+
+            if (isEvent(m.body)) {
+              // Group events ("created the group", "added Sana") read as a quiet line, not a bubble.
+              return (
+                <Fragment key={m.id}>
+                  {separator}
+                  <li data-testid="chat-message" className="my-2 text-center text-xs text-muted">
+                    <span className="rounded-full bg-surface-alt px-3 py-1">
+                      {m.authorId === meId ? 'You' : (m.authorName ?? 'Someone')} {m.body.slice(1, -1)} · {timeOf(m.createdAt, timezone)}
+                    </span>
+                  </li>
+                </Fragment>
+              );
+            }
+
+            const mine = m.authorId === meId;
+            // Consecutive messages from one person within 5 minutes form one run: name and avatar once.
+            const startsRun = newDay || !prev || isEvent(prev.body) || prev.authorId !== m.authorId || Date.parse(m.createdAt) - Date.parse(prev.createdAt) > 5 * 60_000;
+            const name = m.authorName ?? 'Someone';
+            return (
+              <Fragment key={m.id}>
+                {separator}
+                <li data-testid="chat-message" data-mine={mine ? 'true' : undefined} className={`flex items-end gap-2 ${mine ? 'justify-end' : 'justify-start'} ${startsRun ? 'mt-3' : ''}`}>
+                  {!mine ? (
+                    <span
+                      aria-hidden
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-alt text-[11px] font-semibold ${startsRun ? '' : 'invisible'}`}
+                    >
+                      {initialsOf(name)}
+                    </span>
+                  ) : null}
+                  <div className={`flex max-w-[78%] flex-col ${mine ? 'items-end' : 'items-start'}`}>
+                    {startsRun && !mine ? <span className="mb-1 px-1 text-xs font-medium text-muted">{name}</span> : null}
+                    <div
+                      className={`rounded-2xl px-3.5 py-2 shadow-card ${
+                        mine ? 'rounded-br-md bg-primary text-on-primary' : 'rounded-bl-md border border-border bg-surface-alt text-body'
+                      }`}
+                    >
+                      <span className="sr-only">{mine ? 'You' : name}: </span>
+                      <MessageBody m={m} mine={mine} />
+                      <span className={`mt-0.5 block text-right text-[10.5px] ${mine ? 'text-on-primary/60' : 'text-muted'}`} title={formatDateTime(m.createdAt, timezone)}>
+                        {timeOf(m.createdAt, timezone)}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              </Fragment>
+            );
+          })}
         </ul>
         <div ref={end} />
       </div>
