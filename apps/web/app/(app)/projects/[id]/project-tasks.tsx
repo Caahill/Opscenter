@@ -1,6 +1,6 @@
 'use client';
 import { PRIORITY_LABELS, PRIORITIES, type ProjectDetailView, type UserView } from '@opshub/shared';
-import { Button, Card, inputClass, Label } from '@opshub/ui';
+import { Button, Card, Chip, inputClass, Label } from '@opshub/ui';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { CapacityWarning } from '@/lib/capacity-warning';
@@ -14,6 +14,7 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
   const [showDone, setShowDone] = useState(false);
   const tasks = (project.tasks ?? []).filter((t) => showDone || (t.statusType !== 'DONE' && t.statusType !== 'STOPPED'));
   const doneCount = (project.tasks ?? []).length - (project.tasks ?? []).filter((t) => t.statusType !== 'DONE' && t.statusType !== 'STOPPED').length;
+  const unassigned = (project.tasks ?? []).filter((t) => !t.assigneeName && t.statusType !== 'DONE' && t.statusType !== 'STOPPED').length;
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -33,7 +34,14 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
   return (
     <Card>
       <div className="flex items-center justify-between">
-        <Label>Tasks</Label>
+        <span className="flex items-center gap-2">
+          <Label>Tasks</Label>
+          {unassigned > 0 ? (
+            <Chip tone="warning" title="Open tasks with no one assigned: open a task to assign it">
+              {unassigned} unassigned
+            </Chip>
+          ) : null}
+        </span>
         {doneCount > 0 ? (
           <button type="button" className="text-[13px] text-link" onClick={() => setShowDone((v) => !v)}>
             {showDone ? 'Hide' : 'Show'} {doneCount} done
@@ -48,7 +56,7 @@ export function ProjectTasks({ project, users, canCreate }: { project: ProjectDe
                 {t.title}
               </Link>
               <p className="text-[13px] text-muted">
-                {t.assigneeName ?? 'Unassigned'}
+                {t.assigneeName ?? <span className="font-medium text-[#b45309]">Unassigned</span>}
                 {t.dueDate ? (
                   <span className={isOverdue(t.dueDate, t.statusType) ? 'font-medium text-error' : undefined}>
                     {` · due ${formatDate(t.dueDate)}`}

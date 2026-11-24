@@ -3,14 +3,17 @@ import { Card, EmptyState, Label, Masked, PageHeader } from '@opshub/ui';
 import Link from 'next/link';
 import { api, getMe } from '@/lib/api';
 import { formatDay, formatLeave } from '@/lib/format';
-import { HolidayForm, LeaveForm, LeaveRowActions, RemoveHoliday } from './leave-forms';
+import { BulkHolidayForm, HolidayForm, LeaveForm, LeaveRowActions, RemoveHoliday } from './leave-forms';
 
 /** PRD 3.1: HR records leave; everyone else sees availability within their scope. */
-export default async function LeavePage() {
+export default async function LeavePage({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
   const me = await getMe();
   const manage = me.permissions.includes('leave.manage');
   const holidaysManage = me.permissions.includes('holiday.manage');
-  const year = Number(todayIn(DEFAULT_TIMEZONE).slice(0, 4));
+  const thisYear = Number(todayIn(DEFAULT_TIMEZONE).slice(0, 4));
+  const asked = Number((await searchParams).year);
+  // This year or next: HR usually publishes next year's list in December.
+  const year = asked === thisYear + 1 ? asked : thisYear;
   const [leave, holidays, users] = await Promise.all([
     api<LeaveView[]>('/leave'),
     api<HolidayView[]>(`/holidays?year=${year}`),
@@ -72,7 +75,21 @@ export default async function LeavePage() {
             </Card>
           ) : null}
           <Card>
-            <Label>Office holidays {year}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Office holidays {year}</Label>
+              <span className="flex gap-1 text-[13px]">
+                {[thisYear, thisYear + 1].map((y) => (
+                  <Link
+                    key={y}
+                    href={y === thisYear ? '/leave' : `/leave?year=${y}`}
+                    aria-current={y === year ? 'true' : undefined}
+                    className={`rounded-md px-2 py-0.5 ${y === year ? 'bg-pale-purple font-semibold text-accent-pressed' : 'text-muted hover:text-body'}`}
+                  >
+                    {y}
+                  </Link>
+                ))}
+              </span>
+            </div>
             <ul className="mt-3 space-y-1 text-[14px]">
               {holidays.map((h) => (
                 <li key={h.id} className="flex items-center justify-between gap-2">
@@ -82,9 +99,14 @@ export default async function LeavePage() {
                   {holidaysManage ? <RemoveHoliday id={h.id} name={h.name} /> : null}
                 </li>
               ))}
-              {holidays.length === 0 ? <li className="text-muted">None recorded.</li> : null}
+              {holidays.length === 0 ? <li className="text-muted">No holidays recorded for {year} yet.</li> : null}
             </ul>
-            {holidaysManage ? <HolidayForm /> : null}
+            {holidaysManage ? (
+              <>
+                <HolidayForm />
+                <BulkHolidayForm existing={holidays} />
+              </>
+            ) : null}
           </Card>
         </div>
       </div>
